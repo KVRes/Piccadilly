@@ -1,4 +1,4 @@
-package kv
+package piccadilly
 
 import (
 	"log"
@@ -39,6 +39,7 @@ type Bucket struct {
 	cmtLog   cml.CommitLog
 	cfg      BucketConfig
 	wChannel chan wRequest
+	Watcher  *KeyWatcher
 }
 
 func (b *Bucket) apply(rec cml.Record) error {
@@ -117,6 +118,7 @@ func (b *Bucket) WriteChannel() {
 			kvp.done <- b.Set(kv.key, kv.value)
 			keyBuf.keys[idx] = ""
 		}(kv, empty)
+		go b.Watcher.EmitEvent(kv.key, EventSet)
 
 	}
 
