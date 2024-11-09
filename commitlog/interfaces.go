@@ -5,6 +5,7 @@ type CommitLog interface {
 	RecordsSinceLastChkptr() ([]Record, error)
 	Truncate() error
 	Load(data []byte) error
+	Serialize() ([]byte, error)
 }
 
 type Record struct {

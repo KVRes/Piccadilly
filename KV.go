@@ -1,4 +1,4 @@
-package piccadilly
+package Piccadilly
 
 import (
 	"log"
@@ -40,6 +40,14 @@ type Bucket struct {
 	cfg      BucketConfig
 	wChannel chan wRequest
 	Watcher  *KeyWatcher
+}
+
+func NewBucket(store store.Store, cmtLog cml.CommitLog) *Bucket {
+	return &Bucket{
+		store:   store,
+		cmtLog:  cmtLog,
+		Watcher: NewKeyWatcher(),
+	}
 }
 
 func (b *Bucket) apply(rec cml.Record) error {
@@ -137,6 +145,12 @@ func (b *Bucket) daemon() {
 			continue
 		}
 		b.cmtLog.Truncate()
+		/*if bytes, err := b.cmtLog.Serialize(); err != nil {
+			log.Println("Serialize commitlog failed:", err)
+			continue
+		} else {
+			os.WriteFile(b.cfg.CommitLogPath, bytes, 0644)
+		}*/
 	}
 }
 

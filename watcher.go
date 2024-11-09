@@ -1,4 +1,4 @@
-package piccadilly
+package Piccadilly
 
 import "sync"
 
@@ -10,6 +10,10 @@ type KeyWatcher struct {
 type watcher struct {
 	ch chan struct{}
 	et EventType
+}
+
+func NewKeyWatcher() *KeyWatcher {
+	return &KeyWatcher{ws: make(map[string][]watcher)}
 }
 
 func (w *KeyWatcher) Watch(key string, eventType EventType) <-chan struct{} {
