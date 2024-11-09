@@ -13,12 +13,32 @@ type BucketConfig struct {
 	CommitLogPath string
 	PersistPath   string
 	FlushInterval time.Duration
+	WBuffer       int
+	WKeySet       int
+}
+
+type KVPair struct {
+	key   string
+	value string
+}
+
+func (kvp KVPair) ToWRequest() wRequest {
+	return wRequest{
+		KVPair: kvp,
+		done:   make(chan error),
+	}
+}
+
+type wRequest struct {
+	KVPair
+	done chan error
 }
 
 type Bucket struct {
-	store  store.Store
-	cmtLog cml.CommitLog
-	cfg    BucketConfig
+	store    store.Store
+	cmtLog   cml.CommitLog
+	cfg      BucketConfig
+	wChannel chan wRequest
 }
 
 func (b *Bucket) apply(rec cml.Record) error {
@@ -57,7 +77,53 @@ func (b *Bucket) StartService(cfg BucketConfig) error {
 
 	// Give daemon a lock!
 	go b.daemon()
+	b.wChannel = make(chan wRequest, cfg.WBuffer)
 	return nil
+}
+
+type keyBuf struct {
+	keys []string
+}
+
+func (k *keyBuf) init(size int) {
+	k.keys = make([]string, size)
+}
+
+func (k *keyBuf) findEmpty(key string) int {
+	empty := -1
+	for i, k := range k.keys {
+		if k == "" {
+			empty = i
+		}
+		if k == key {
+			return -1
+		}
+	}
+	return empty
+}
+
+func (b *Bucket) WriteChannel() {
+	keyBuf := &keyBuf{}
+	keyBuf.init(b.cfg.WKeySet)
+	for {
+		kv := <-b.wChannel
+		empty := keyBuf.findEmpty(kv.key)
+		if empty == -1 {
+			// buffer is full, wait for a slot
+			go b.appendToWChannel(kv)
+			continue
+		}
+		go func(kvp wRequest, idx int) {
+			kvp.done <- b.Set(kv.key, kv.value)
+			keyBuf.keys[idx] = ""
+		}(kv, empty)
+
+	}
+
+}
+
+func (b *Bucket) appendToWChannel(req wRequest) {
+	b.wChannel <- req
 }
 
 func (b *Bucket) daemon() {
@@ -105,16 +171,13 @@ func (b *Bucket) recoverFromCommitLog() error {
 }
 
 func (b *Bucket) Set(key, value string) error {
-	rec := cml.Record{
-		StateOper: cml.StateOperSet,
-		Key:       key,
-		Value:     value,
-	}
-	_, err := b.cmtLog.Append(rec)
-	if err != nil {
+	rec := cml.NewStateOperRecord(cml.StateOperSet).WithKeyValue(key, value)
+	if _, err := b.cmtLog.Append(rec); err != nil {
 		return err
 	}
-	return b.store.Set(key, value)
+	req := KVPair{key, value}.ToWRequest()
+	b.appendToWChannel(req)
+	return <-req.done
 }
 
 func (b *Bucket) Get(key string) (string, error) {

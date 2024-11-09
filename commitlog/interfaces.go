@@ -27,3 +27,9 @@ func NewStateOperRecord(oper StateOperType) Record {
 		StateOper: oper,
 	}
 }
+
+func (r Record) WithKeyValue(key, value string) Record {
+	r.Key = key
+	r.Value = value
+	return r
+}
