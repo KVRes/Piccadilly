@@ -1,0 +1,15 @@
+.DS_Store
+desktop.ini
+
+.idea
+.vscode
+
+*.log
+
+*.db
+*.db.tmp
+*.db.tmp.lock
+
+*.pid
+
+*.lock
