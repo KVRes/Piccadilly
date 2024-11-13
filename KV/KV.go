@@ -1,7 +1,6 @@
 package KV
 
 import (
-	"fmt"
 	"github.com/KVRes/Piccadilly/types"
 	"github.com/KVRes/Piccadilly/utils"
 	"log"
@@ -19,6 +18,7 @@ type BucketConfig struct {
 	FlushInterval time.Duration
 	WBuffer       int
 	WKeySet       int
+	NoFlush       bool
 }
 
 func (b *BucketConfig) Normalise() {
@@ -117,7 +117,6 @@ func (b *Bucket) StartService(cfg BucketConfig) error {
 }
 
 func (b *Bucket) WriteChannel() {
-	fmt.Println("WriteChannel started")
 	keyBuf := newKeyBuf(b.cfg.WKeySet)
 	for {
 		kv := <-b.wChannel
@@ -127,7 +126,6 @@ func (b *Bucket) WriteChannel() {
 			go b.appendToWChannel(kv)
 			continue
 		}
-		fmt.Println("WriteChannel setting:", kv.Key)
 		go func(kvp wRequest, idx int) {
 			kvp.done <- b.store.Set(kv.Key, kv.Value)
 			keyBuf.keys[idx] = ""
@@ -144,11 +142,14 @@ func (b *Bucket) appendToWChannel(req wRequest) {
 func (b *Bucket) daemon() {
 	for {
 		time.Sleep(b.cfg.FlushInterval)
-		err := b.Flush()
-		if err != nil {
-			log.Println("Flush failed:", err)
-			continue
+		if !b.cfg.NoFlush {
+			err := b.Flush()
+			if err != nil {
+				log.Println("Flush failed:", err)
+				continue
+			}
 		}
+
 		b.wal.Truncate()
 		/*if bytes, err := b.wal.Serialize(); err != nil {
 			log.Println("Serialize commitlog failed:", err)

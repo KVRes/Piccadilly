@@ -6,6 +6,7 @@ type Provider interface {
 	Truncate() error
 	Load(data []byte) error
 	Serialize() ([]byte, error)
+	Close() error
 }
 
 type Record struct {

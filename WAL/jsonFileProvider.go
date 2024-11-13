@@ -83,6 +83,10 @@ func (j *JsonWALProvider) Load(data []byte) error {
 	return nil
 }
 
+func (j *JsonWALProvider) Close() error {
+	return j.file.Close()
+}
+
 func (j *JsonWALProvider) GetLastChkptr() (uint64, error) {
 	if len(j.content) == 0 {
 		return 0, nil
