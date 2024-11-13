@@ -1,5 +1,7 @@
 package WAL
 
+import "github.com/KVRes/Piccadilly/types"
+
 type Provider interface {
 	Append(record Record) (uint64, error)
 	RecordsSinceLastChkptr() ([]Record, error)
@@ -27,6 +29,17 @@ const (
 func NewStateOperRecord(oper StateOperType) Record {
 	return Record{
 		StateOper: oper,
+	}
+}
+
+func NewStateOperFromEventTypes(event types.EventType) Record {
+	switch event {
+	case types.EventSet:
+		return NewStateOperRecord(StateOperSet)
+	case types.EventDelete:
+		return NewStateOperRecord(StateOperDel)
+	default:
+		panic("unknown event type")
 	}
 }
 

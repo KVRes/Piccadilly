@@ -2,7 +2,7 @@ package store
 
 import "errors"
 
-type Store interface {
+type Provider interface {
 	Get(key string) (string, error)
 	Set(key, value string) error
 	Del(key string) error

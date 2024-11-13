@@ -49,4 +49,4 @@ func (m *MemStore) Load(data []byte) error {
 	return json.Unmarshal(data, &m.m)
 }
 
-var _ Store = &MemStore{}
+var _ Provider = &MemStore{}

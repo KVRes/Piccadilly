@@ -2,9 +2,9 @@ package client
 
 import (
 	"context"
+	"github.com/KVRes/Piccadilly/types"
 
 	"github.com/KVRes/Piccadilly/pb"
-	"github.com/KVRes/Piccadilly/watcher"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -32,17 +32,17 @@ func (c *Client) Close() error {
 }
 
 type Subscribed struct {
-	Ch          <-chan watcher.ErrorableEvent
+	Ch          <-chan ErrorableEvent
 	Unsubscribe chan struct{}
 }
 
-func (c *Client) Watch(key string, eventType watcher.EventType) (Subscribed, error) {
+func (c *Client) Watch(key string, eventType types.EventType) (Subscribed, error) {
 	stream, err := c.ev.SubscribeEvents(context.Background(), &pb.SubscribeRequest{Key: key, EventType: int32(eventType)})
 	if err != nil {
 		return Subscribed{}, err
 	}
 
-	ch := make(chan watcher.ErrorableEvent)
+	ch := make(chan ErrorableEvent)
 	unsubscribe := make(chan struct{})
 	go func() {
 		for {
@@ -52,13 +52,13 @@ func (c *Client) Watch(key string, eventType watcher.EventType) (Subscribed, err
 			default:
 				event, err := stream.Recv()
 				if err != nil {
-					ch <- watcher.ErrorableEvent{Err: err, IsError: true}
+					ch <- ErrorableEvent{Err: err, IsError: true}
 					continue
 				}
-				ch <- watcher.ErrorableEvent{
-					Event: watcher.Event{
+				ch <- ErrorableEvent{
+					Event: Event{
 						Key:       event.EventVal,
-						EventType: watcher.EventType(event.EventType),
+						EventType: types.EventType(event.EventType),
 					},
 					Err:     nil,
 					IsError: false,

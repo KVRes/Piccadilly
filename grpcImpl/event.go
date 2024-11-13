@@ -2,6 +2,7 @@ package grpcImpl
 
 import (
 	"github.com/KVRes/Piccadilly/pb"
+	"github.com/KVRes/Piccadilly/types"
 	"github.com/KVRes/Piccadilly/watcher"
 )
 
@@ -13,7 +14,7 @@ type EventService struct {
 func (s *EventService) SubscribeEvents(req *pb.SubscribeRequest, stream pb.EventService_SubscribeEventsServer) error {
 	ch := make(chan struct{})
 	sub := &GRPCSubscriber{stream: stream, off: ch}
-	s.Watcher.Watch(req.Key, watcher.EventType(req.EventType), sub)
+	s.Watcher.Watch(req.Key, types.EventType(req.EventType), sub)
 	<-ch
 	return nil
 }
@@ -26,7 +27,7 @@ type GRPCSubscriber struct {
 	off    chan struct{}
 }
 
-func (s *GRPCSubscriber) Notify(key string, eventType watcher.EventType) {
+func (s *GRPCSubscriber) Notify(key string, eventType types.EventType) {
 	s.stream.Send(&pb.Event{EventVal: key, EventType: int32(eventType)})
 }
 

@@ -1,5 +1,7 @@
 package watcher
 
+import "github.com/KVRes/Piccadilly/types"
+
 type BaseSubscriber struct {
 	w *watcher
 }
@@ -10,7 +12,7 @@ func (s *BaseSubscriber) Close() {
 
 type Subscriber interface {
 	SetBaseSubscriber(w BaseSubscriber)
-	Notify(key string, eventType EventType)
+	Notify(key string, eventType types.EventType)
 	Close() error
 }
 
@@ -19,7 +21,7 @@ type EventSubscriber struct {
 	ch   chan struct{}
 }
 
-func (s *EventSubscriber) Notify(key string, eventType EventType) {
+func (s *EventSubscriber) Notify(key string, eventType types.EventType) {
 	s.ch <- struct{}{}
 }
 

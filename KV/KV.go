@@ -35,14 +35,7 @@ func (b *BucketConfig) Normalise() {
 	}
 }
 
-type modifyReqType int
-
-const (
-	modifyReqSet modifyReqType = 1
-	modifyReqDel modifyReqType = 2
-)
-
-func toReq(kvp types.KVPair, t modifyReqType) internalReq {
+func toReq(kvp types.KVPair, t types.EventType) internalReq {
 	return internalReq{
 		KVPair: kvp,
 		done:   make(chan error),
@@ -51,7 +44,7 @@ func toReq(kvp types.KVPair, t modifyReqType) internalReq {
 }
 
 type internalReq struct {
-	t modifyReqType
+	t types.EventType
 	types.KVPair
 	done chan error
 }
@@ -61,17 +54,17 @@ func (wr *internalReq) Close() {
 }
 
 type Bucket struct {
-	store    store.Store
+	store    store.Provider
 	wal      WAL.Provider
 	cfg      BucketConfig
 	wChannel chan internalReq
 	Watcher  *watcher.KeyWatcher
 }
 
-func NewBucket(store store.Store, cmtLog WAL.Provider) *Bucket {
+func NewBucket(store store.Provider, wal WAL.Provider) *Bucket {
 	return &Bucket{
 		store:   store,
-		wal:     cmtLog,
+		wal:     wal,
 		Watcher: watcher.NewKeyWatcher(),
 	}
 }
@@ -80,28 +73,27 @@ func (b *Bucket) apply(rec WAL.Record) error {
 	switch rec.StateOper {
 	case WAL.StateOperSet:
 		return b.store.Set(rec.Key, rec.Value)
+	case WAL.StateOperDel:
+		return b.store.Del(rec.Key)
 	}
 	return nil
 }
 
 func (b *Bucket) StartService(cfg BucketConfig) error {
 	// recover from crash
+	cfg.Normalise()
 	b.cfg = cfg
-	b.cfg.Normalise()
 
-	cmlBytes, err := os.ReadFile(cfg.WALPath)
+	walBytes, err := os.ReadFile(cfg.WALPath)
+	if err == nil {
+		err = b.wal.Load(walBytes)
+	}
 	if err != nil {
 		return err
 	}
 
-	if err = b.wal.Load(cmlBytes); err != nil {
-		return err
-	}
-
 	// create persist store
-	if _, err = os.Stat(cfg.PersistPath); os.IsNotExist(err) {
-		os.WriteFile(cfg.PersistPath, []byte{}, 0644)
-	}
+	_ = utils.CreateFileIfNotExists(cfg.PersistPath)
 	persistBytes, err := os.ReadFile(cfg.PersistPath)
 	if err != nil {
 		return err
@@ -114,39 +106,15 @@ func (b *Bucket) StartService(cfg BucketConfig) error {
 		}
 	}
 
-	if err := b.recoverFromWAL(); err != nil {
+	if err := b.RecoverFromWAL(); err != nil {
 		return err
 	}
 
 	// Give daemon a lock!
 	go b.daemon()
-	go b.WriteChannel()
+	go b.writeChannel()
 	b.wChannel = make(chan internalReq, cfg.WBuffer)
 	return nil
-}
-
-func (b *Bucket) WriteChannel() {
-	keyBuf := newKeyBuf(b.cfg.WKeySet)
-	for {
-		kv := <-b.wChannel
-		empty := keyBuf.findEmpty(kv.Key)
-		if empty == -1 {
-			// buffer is full, wait for a slot
-			go b.appendToWChannel(kv)
-			continue
-		}
-		go func(kvp internalReq, idx int) {
-			switch kvp.t {
-			case modifyReqSet:
-				kvp.done <- b.store.Set(kvp.Key, kvp.Value)
-			case modifyReqDel:
-				kvp.done <- b.store.Del(kvp.Key)
-			}
-			keyBuf.keys[idx] = ""
-		}(kv, empty)
-		go b.Watcher.EmitEvent(kv.Key, watcher.EventSet)
-	}
-
 }
 
 func (b *Bucket) appendToWChannel(req internalReq) {
@@ -193,11 +161,7 @@ func (b *Bucket) Flush() error {
 	return err
 }
 
-func (b *Bucket) recoverFromWAL() error {
-	recs, err := b.wal.RecordsSinceLastChkptr()
-	if err != nil {
-		return err
-	}
+func (b *Bucket) RecoverFromRecords(recs []WAL.Record) error {
 	for _, rec := range recs {
 		if err := b.apply(rec); err != nil {
 			return err
@@ -205,29 +169,11 @@ func (b *Bucket) recoverFromWAL() error {
 	}
 	return nil
 }
-
-func (b *Bucket) Set(key, value string) error {
-	rec := WAL.NewStateOperRecord(WAL.StateOperSet).WithKeyValue(key, value)
-	if _, err := b.wal.Append(rec); err != nil {
+func (b *Bucket) RecoverFromWAL() error {
+	recs, err := b.wal.RecordsSinceLastChkptr()
+	if err != nil {
 		return err
 	}
-	req := toReq(types.KVPair{Key: key, Value: value}, modifyReqSet)
-	defer req.Close()
-	b.appendToWChannel(req)
-	return <-req.done
-}
 
-func (b *Bucket) Del(key string) error {
-	rec := WAL.NewStateOperRecord(WAL.StateOperDel).WithKeyValue(key, "")
-	if _, err := b.wal.Append(rec); err != nil {
-		return err
-	}
-	req := toReq(types.KVPair{Key: key}, modifyReqDel)
-	defer req.Close()
-	b.appendToWChannel(req)
-	return <-req.done
-}
-
-func (b *Bucket) Get(key string) (string, error) {
-	return b.store.Get(key)
+	return b.RecoverFromRecords(recs)
 }
