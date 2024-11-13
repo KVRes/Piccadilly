@@ -12,7 +12,7 @@ type EventService struct {
 
 func (s *EventService) SubscribeEvents(req *pb.SubscribeRequest, stream pb.EventService_SubscribeEventsServer) error {
 	ch := make(chan struct{})
-	sub := &GRPCSubscriber{stream, ch}
+	sub := &GRPCSubscriber{stream: stream, off: ch}
 	s.w.Watch(req.Key, watcher.EventType(req.EventType), sub)
 	<-ch
 	return nil
@@ -25,6 +25,7 @@ func NewEventService() *EventService {
 var _ pb.EventServiceServer = &EventService{}
 
 type GRPCSubscriber struct {
+	base   watcher.BaseSubscriber
 	stream pb.EventService_SubscribeEventsServer
 	off    chan struct{}
 }
@@ -34,6 +35,13 @@ func (s *GRPCSubscriber) Notify(key string, eventType watcher.EventType) {
 }
 
 func (s *GRPCSubscriber) Close() error {
+	s.base.Close()
 	s.off <- struct{}{}
 	return nil
 }
+
+func (s *GRPCSubscriber) SetBaseSubscriber(w watcher.BaseSubscriber) {
+	s.base = w
+}
+
+var _ watcher.Subscriber = &GRPCSubscriber{}

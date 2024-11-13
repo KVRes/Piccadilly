@@ -5,7 +5,7 @@ import (
 )
 
 type KeyWatcher struct {
-	ws map[string][]watcher
+	ws map[string][]*watcher
 	l  sync.RWMutex
 }
 
@@ -16,16 +16,18 @@ type watcher struct {
 }
 
 func NewKeyWatcher() *KeyWatcher {
-	return &KeyWatcher{ws: make(map[string][]watcher)}
+	return &KeyWatcher{ws: make(map[string][]*watcher)}
 }
 
 func (w *KeyWatcher) Watch(key string, eventType EventType, subscriber Subscriber) {
 	w.l.Lock()
 	defer w.l.Unlock()
 	if _, ok := w.ws[key]; !ok {
-		w.ws[key] = []watcher{}
+		w.ws[key] = []*watcher{}
 	}
-	w.ws[key] = append(w.ws[key], watcher{subscriber, eventType, false})
+	_w := &watcher{subscriber, eventType, false}
+	subscriber.SetBaseSubscriber(BaseSubscriber{w: _w})
+	w.ws[key] = append(w.ws[key], _w)
 }
 
 func (w *KeyWatcher) EmitEvent(key string, eventType EventType) {
@@ -48,7 +50,10 @@ func (w *KeyWatcher) GC() {
 	w.l.Lock()
 	defer w.l.Unlock()
 	for k, v := range w.ws {
-		w.ws[k] = filter(v, func(w watcher) bool {
+		w.ws[k] = filter(v, func(w *watcher) bool {
+			if w == nil {
+				return false
+			}
 			w.sub.Close()
 			return !w.obsolete
 		})
