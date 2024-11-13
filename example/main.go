@@ -1,24 +1,24 @@
 package main
 
 import (
+	"github.com/KVRes/Piccadilly/KV"
 	"log"
 
-	"github.com/KVRes/Piccadilly"
-	"github.com/KVRes/Piccadilly/commitlog"
+	"github.com/KVRes/Piccadilly/WAL"
 	"github.com/KVRes/Piccadilly/store"
 )
 
 func main() {
-	cmtLog, err := commitlog.NewJsonFileProvider("commitlog.json")
+	cmtLog, err := WAL.NewJsonWALProvider("commitlog.json")
 	if err != nil {
-		log.Println("NewJsonFileProvider failed:", err)
+		log.Println("NewJsonWALProvider failed:", err)
 		return
 	}
 
-	db := Piccadilly.NewBucket(store.NewSwissTableStore(), cmtLog)
+	db := KV.NewBucket(store.NewSwissTableStore(), cmtLog)
 
-	db.StartService(Piccadilly.BucketConfig{
-		CommitLogPath: "commitlog.json",
-		PersistPath:   "persist.json",
+	db.StartService(KV.BucketConfig{
+		WALPath:     "commitlog.json",
+		PersistPath: "persist.json",
 	})
 }

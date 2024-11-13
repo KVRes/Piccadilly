@@ -1,4 +1,4 @@
-package commitlog
+package WAL
 
 import (
 	"encoding/json"
@@ -7,16 +7,16 @@ import (
 	"sync"
 )
 
-type JsonFileProvider struct {
+type JsonWALProvider struct {
 	l        sync.Mutex
 	content  []Record
 	filePath string
 	file     *os.File
 }
 
-func NewJsonFileProvider(filePath string) (*JsonFileProvider, error) {
-	obj := &JsonFileProvider{filePath: filePath}
-	handle, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND, 0644)
+func NewJsonWALProvider(filePath string) (*JsonWALProvider, error) {
+	obj := &JsonWALProvider{filePath: filePath}
+	handle, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return nil, err
 	}
@@ -24,7 +24,7 @@ func NewJsonFileProvider(filePath string) (*JsonFileProvider, error) {
 	return obj, nil
 }
 
-func (j *JsonFileProvider) Append(record Record) (uint64, error) {
+func (j *JsonWALProvider) Append(record Record) (uint64, error) {
 	j.l.Lock()
 	defer j.l.Unlock()
 	j.content = append(j.content, record)
@@ -33,15 +33,15 @@ func (j *JsonFileProvider) Append(record Record) (uint64, error) {
 		return 0, err
 	}
 	// new line
-	line = append(line, '\n')
-	_, err = j.file.Write(line)
+	ls := string(line) + "\n"
+	_, err = j.file.WriteString(ls)
 	if err != nil {
 		return 0, err
 	}
 	return uint64(len(j.content)), nil
 }
 
-func (j *JsonFileProvider) RecordsSinceLastChkptr() ([]Record, error) {
+func (j *JsonWALProvider) RecordsSinceLastChkptr() ([]Record, error) {
 	checkpointPos, err := j.GetLastChkptr()
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (j *JsonFileProvider) RecordsSinceLastChkptr() ([]Record, error) {
 	return j.content[checkpointPos:], nil
 }
 
-func (j *JsonFileProvider) Truncate() error {
+func (j *JsonWALProvider) Truncate() error {
 	j.l.Lock()
 	defer j.l.Unlock()
 	checkpointPos, err := j.GetLastChkptr()
@@ -60,8 +60,7 @@ func (j *JsonFileProvider) Truncate() error {
 	return nil
 }
 
-func (j *JsonFileProvider) Load(data []byte) error {
-	// text to json lines
+func (j *JsonWALProvider) Load(data []byte) error {
 	j.l.Lock()
 	defer j.l.Unlock()
 
@@ -84,7 +83,7 @@ func (j *JsonFileProvider) Load(data []byte) error {
 	return nil
 }
 
-func (j *JsonFileProvider) GetLastChkptr() (uint64, error) {
+func (j *JsonWALProvider) GetLastChkptr() (uint64, error) {
 	if len(j.content) == 0 {
 		return 0, nil
 	}
@@ -103,18 +102,8 @@ func (j *JsonFileProvider) GetLastChkptr() (uint64, error) {
 	return 0, nil
 }
 
-func (j *JsonFileProvider) Serialize() ([]byte, error) {
-	lines := make([]string, 0, len(j.content))
-	bs := &strings.Builder{}
-	for _, record := range j.content {
-		line, err := json.Marshal(record)
-		if err != nil {
-			return nil, err
-		}
-		lines = append(lines, string(line))
-	}
-	bs.WriteString(strings.Join(lines, "\n"))
-	return []byte(bs.String()), nil
+func (j *JsonWALProvider) Serialize() ([]byte, error) {
+	return json.Marshal(j.content)
 }
 
-var _ CommitLog = &JsonFileProvider{}
+var _ Provider = &JsonWALProvider{}

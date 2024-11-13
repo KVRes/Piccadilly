@@ -1,6 +1,6 @@
-package commitlog
+package WAL
 
-type CommitLog interface {
+type Provider interface {
 	Append(record Record) (uint64, error)
 	RecordsSinceLastChkptr() ([]Record, error)
 	Truncate() error

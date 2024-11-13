@@ -1,29 +1,41 @@
-package Piccadilly
+package KV
 
 import (
+	"fmt"
+	"github.com/KVRes/Piccadilly/types"
+	"github.com/KVRes/Piccadilly/utils"
 	"log"
 	"os"
 	"time"
 
-	cml "github.com/KVRes/Piccadilly/commitlog"
+	"github.com/KVRes/Piccadilly/WAL"
 	"github.com/KVRes/Piccadilly/store"
 	"github.com/KVRes/Piccadilly/watcher"
 )
 
 type BucketConfig struct {
-	CommitLogPath string
+	WALPath       string
 	PersistPath   string
 	FlushInterval time.Duration
 	WBuffer       int
 	WKeySet       int
 }
 
-type KVPair struct {
-	key   string
-	value string
+func (b *BucketConfig) Normalise() {
+	if b.WBuffer <= 0 {
+		b.WBuffer = 100
+	}
+
+	if b.WKeySet <= 0 {
+		b.WKeySet = 100
+	}
+
+	if b.FlushInterval <= 0 {
+		b.FlushInterval = 5 * time.Second
+	}
 }
 
-func (kvp KVPair) ToWRequest() wRequest {
+func ToWRequest(kvp types.KVPair) wRequest {
 	return wRequest{
 		KVPair: kvp,
 		done:   make(chan error),
@@ -31,7 +43,7 @@ func (kvp KVPair) ToWRequest() wRequest {
 }
 
 type wRequest struct {
-	KVPair
+	types.KVPair
 	done chan error
 }
 
@@ -41,23 +53,23 @@ func (wr *wRequest) Close() {
 
 type Bucket struct {
 	store    store.Store
-	cmtLog   cml.CommitLog
+	wal      WAL.Provider
 	cfg      BucketConfig
 	wChannel chan wRequest
 	Watcher  *watcher.KeyWatcher
 }
 
-func NewBucket(store store.Store, cmtLog cml.CommitLog) *Bucket {
+func NewBucket(store store.Store, cmtLog WAL.Provider) *Bucket {
 	return &Bucket{
 		store:   store,
-		cmtLog:  cmtLog,
+		wal:     cmtLog,
 		Watcher: watcher.NewKeyWatcher(),
 	}
 }
 
-func (b *Bucket) apply(rec cml.Record) error {
+func (b *Bucket) apply(rec WAL.Record) error {
 	switch rec.StateOper {
-	case cml.StateOperSet:
+	case WAL.StateOperSet:
 		return b.store.Set(rec.Key, rec.Value)
 	}
 	return nil
@@ -66,72 +78,61 @@ func (b *Bucket) apply(rec cml.Record) error {
 func (b *Bucket) StartService(cfg BucketConfig) error {
 	// recover from crash
 	b.cfg = cfg
+	b.cfg.Normalise()
 
-	cmlBytes, err := os.ReadFile(cfg.CommitLogPath)
+	cmlBytes, err := os.ReadFile(cfg.WALPath)
 	if err != nil {
 		return err
 	}
 
-	if err = b.cmtLog.Load(cmlBytes); err != nil {
+	if err = b.wal.Load(cmlBytes); err != nil {
 		return err
 	}
 
 	// create persist store
+	if _, err = os.Stat(cfg.PersistPath); os.IsNotExist(err) {
+		os.WriteFile(cfg.PersistPath, []byte{}, 0644)
+	}
 	persistBytes, err := os.ReadFile(cfg.PersistPath)
 	if err != nil {
 		return err
 	}
-	if err = b.store.Load(persistBytes); err != nil {
-		return err
+	persistBytes = utils.TrimBytes(persistBytes)
+	if !utils.IsEmptyBytes(persistBytes) {
+		err = b.store.Load(persistBytes)
+		if err != nil {
+			return err
+		}
 	}
 
-	if err := b.recoverFromCommitLog(); err != nil {
+	if err := b.recoverFromWAL(); err != nil {
 		return err
 	}
 
 	// Give daemon a lock!
 	go b.daemon()
+	go b.WriteChannel()
 	b.wChannel = make(chan wRequest, cfg.WBuffer)
 	return nil
 }
 
-type keyBuf struct {
-	keys []string
-}
-
-func (k *keyBuf) init(size int) {
-	k.keys = make([]string, size)
-}
-
-func (k *keyBuf) findEmpty(key string) int {
-	empty := -1
-	for i, k := range k.keys {
-		if k == "" {
-			empty = i
-		}
-		if k == key {
-			return -1
-		}
-	}
-	return empty
-}
-
 func (b *Bucket) WriteChannel() {
-	keyBuf := &keyBuf{}
-	keyBuf.init(b.cfg.WKeySet)
+	fmt.Println("WriteChannel started")
+	keyBuf := newKeyBuf(b.cfg.WKeySet)
 	for {
 		kv := <-b.wChannel
-		empty := keyBuf.findEmpty(kv.key)
+		empty := keyBuf.findEmpty(kv.Key)
 		if empty == -1 {
 			// buffer is full, wait for a slot
 			go b.appendToWChannel(kv)
 			continue
 		}
+		fmt.Println("WriteChannel setting:", kv.Key)
 		go func(kvp wRequest, idx int) {
-			kvp.done <- b.Set(kv.key, kv.value)
+			kvp.done <- b.store.Set(kv.Key, kv.Value)
 			keyBuf.keys[idx] = ""
 		}(kv, empty)
-		go b.Watcher.EmitEvent(kv.key, watcher.EventSet)
+		go b.Watcher.EmitEvent(kv.Key, watcher.EventSet)
 	}
 
 }
@@ -148,18 +149,18 @@ func (b *Bucket) daemon() {
 			log.Println("Flush failed:", err)
 			continue
 		}
-		b.cmtLog.Truncate()
-		/*if bytes, err := b.cmtLog.Serialize(); err != nil {
+		b.wal.Truncate()
+		/*if bytes, err := b.wal.Serialize(); err != nil {
 			log.Println("Serialize commitlog failed:", err)
 			continue
 		} else {
-			os.WriteFile(b.cfg.CommitLogPath, bytes, 0644)
+			os.WriteFile(b.cfg.WALPath, bytes, 0644)
 		}*/
 	}
 }
 
 func (b *Bucket) Flush() error {
-	_, err := b.cmtLog.Append(cml.NewStateOperRecord(cml.StateOperCheckpoint))
+	_, err := b.wal.Append(WAL.NewStateOperRecord(WAL.StateOperCheckpoint))
 	if err != nil {
 		return err
 	}
@@ -173,12 +174,12 @@ func (b *Bucket) Flush() error {
 		return err
 	}
 
-	_, err = b.cmtLog.Append(cml.NewStateOperRecord(cml.StateOperCheckpointOk))
+	_, err = b.wal.Append(WAL.NewStateOperRecord(WAL.StateOperCheckpointOk))
 	return err
 }
 
-func (b *Bucket) recoverFromCommitLog() error {
-	recs, err := b.cmtLog.RecordsSinceLastChkptr()
+func (b *Bucket) recoverFromWAL() error {
+	recs, err := b.wal.RecordsSinceLastChkptr()
 	if err != nil {
 		return err
 	}
@@ -191,11 +192,11 @@ func (b *Bucket) recoverFromCommitLog() error {
 }
 
 func (b *Bucket) Set(key, value string) error {
-	rec := cml.NewStateOperRecord(cml.StateOperSet).WithKeyValue(key, value)
-	if _, err := b.cmtLog.Append(rec); err != nil {
+	rec := WAL.NewStateOperRecord(WAL.StateOperSet).WithKeyValue(key, value)
+	if _, err := b.wal.Append(rec); err != nil {
 		return err
 	}
-	req := KVPair{key, value}.ToWRequest()
+	req := ToWRequest(types.KVPair{Key: key, Value: value})
 	defer req.Close()
 	b.appendToWChannel(req)
 	return <-req.done
