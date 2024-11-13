@@ -2,10 +2,9 @@ package main
 
 import (
 	"github.com/KVRes/Piccadilly/KV/Tablet"
+	"github.com/KVRes/Piccadilly/KV/WAL"
+	"github.com/KVRes/Piccadilly/KV/store"
 	"log"
-
-	"github.com/KVRes/Piccadilly/WAL"
-	"github.com/KVRes/Piccadilly/store"
 )
 
 func main() {

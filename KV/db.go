@@ -2,8 +2,8 @@ package KV
 
 import (
 	"github.com/KVRes/Piccadilly/KV/Tablet"
-	"github.com/KVRes/Piccadilly/WAL"
-	"github.com/KVRes/Piccadilly/store"
+	"github.com/KVRes/Piccadilly/KV/WAL"
+	"github.com/KVRes/Piccadilly/KV/store"
 	"github.com/KVRes/Piccadilly/utils"
 	"os"
 	"sync"

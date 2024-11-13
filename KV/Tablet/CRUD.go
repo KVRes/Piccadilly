@@ -1,7 +1,7 @@
 package Tablet
 
 import (
-	"github.com/KVRes/Piccadilly/WAL"
+	"github.com/KVRes/Piccadilly/KV/WAL"
 	"github.com/KVRes/Piccadilly/types"
 )
 

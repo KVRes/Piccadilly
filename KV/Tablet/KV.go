@@ -1,15 +1,14 @@
 package Tablet
 
 import (
+	"github.com/KVRes/Piccadilly/KV/WAL"
+	"github.com/KVRes/Piccadilly/KV/Watcher"
+	"github.com/KVRes/Piccadilly/KV/store"
 	"github.com/KVRes/Piccadilly/types"
 	"github.com/KVRes/Piccadilly/utils"
 	"log"
 	"os"
 	"time"
-
-	"github.com/KVRes/Piccadilly/WAL"
-	"github.com/KVRes/Piccadilly/store"
-	"github.com/KVRes/Piccadilly/watcher"
 )
 
 type BucketConfig struct {
@@ -58,14 +57,14 @@ type Bucket struct {
 	wal      WAL.Provider
 	cfg      BucketConfig
 	wChannel chan internalReq
-	Watcher  *watcher.KeyWatcher
+	Watcher  *Watcher.KeyWatcher
 }
 
 func NewBucket(store store.Provider, wal WAL.Provider) *Bucket {
 	return &Bucket{
 		store:   store,
 		wal:     wal,
-		Watcher: watcher.NewKeyWatcher(),
+		Watcher: Watcher.NewKeyWatcher(),
 	}
 }
 

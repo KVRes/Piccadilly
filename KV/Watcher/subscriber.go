@@ -1,4 +1,4 @@
-package watcher
+package Watcher
 
 import "github.com/KVRes/Piccadilly/types"
 

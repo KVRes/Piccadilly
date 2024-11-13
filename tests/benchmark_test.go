@@ -2,12 +2,12 @@ package tests
 
 import (
 	"fmt"
+	"github.com/KVRes/Piccadilly/KV/WAL"
+	"github.com/KVRes/Piccadilly/KV/store"
 	"testing"
 	"time"
 
 	"github.com/KVRes/Piccadilly/KV/Tablet"
-	"github.com/KVRes/Piccadilly/WAL"
-	"github.com/KVRes/Piccadilly/store"
 )
 
 func TestDBBenchMark(t *testing.T) {
