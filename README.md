@@ -16,8 +16,11 @@ PKV supports 2 write models:
 
 ### Benchmark (w/o RPC/WAL/GC)
 
-| Data Size | Linear                                                                                              | Buffer (KeySet=5)    |
-|-----------|-----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
-| 100,000   | WR Time: 1.291293166s<br>WR Perf: 774417.48 RPS<br>RD Time: 162.476083ms<br>RD Perf: 6154752.02 RPS | WR Time: 1.153021709s<br>WR Perf: 867286.36 RPS<br>RD Time: 162.239958ms<br>RD Perf: 6163709.68 RPS |
-| 500,000 | WR Time: 7.05466275s<br>WR Perf: 708751.10 RPS<br>RD Time: 973.725708ms<br>RD Perf: 5134916.29 RPS |WR Time: 6.411801333s<br>WR Perf: 779812.06 RPS<br>RD Time: 965.686375ms<br>RD Perf: 5177664.44 RPS |
+Tested on MacBook Air M2 (2022) 8c CPU (4P+4E), 10c GPU, 24GB RAM, 2TB SSD.
 
+PKV benched via direct function call (WAL, GC, Flush disabled). Redis benched via `redis-benchmark -q -n 500000`
+
+| Data Size | Linear | Buffer (KeySet=5)    | Redis |
+|-----------|-----------|-------------------------------| --- |
+| 100,000   | WR Time: 1.291293166s<br>WR Perf: 774417.48 RPS<br>RD Time: 162.476083ms<br>RD Perf: 6154752.02 RPS | WR Time: 1.153021709s<br>WR Perf: 867286.36 RPS<br>RD Time: 162.239958ms<br>RD Perf: 6163709.68 RPS | WR Perf (SET): 138159.72 RPS, p50=0.191 msec<br>RD Perf (GET): 134716.42 RPS, p50=0.191 msec |
+| 500,000 | WR Time: 7.05466275s<br>WR Perf: 708751.10 RPS<br>RD Time: 973.725708ms<br>RD Perf: 5134916.29 RPS |WR Time: 6.411801333s<br>WR Perf: 779812.06 RPS<br>RD Time: 965.686375ms<br>RD Perf: 5177664.44 RPS | WR Perf (SET): 137931.03 requests per second, p50=0.191 msec<br>RD Perf (GET): 137438.16 requests per second, p50=0.191 mse |
