@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"fmt"
 	"github.com/KVRes/Piccadilly/KV"
 	"github.com/KVRes/Piccadilly/WAL"
 	"github.com/KVRes/Piccadilly/store"
@@ -49,6 +48,15 @@ func inDb(t *testing.T, bucket *KV.Bucket, m map[string]string) {
 	}
 }
 
+func notInDb(t *testing.T, bucket *KV.Bucket, m map[string]string) {
+	for k, _ := range m {
+		val, err := bucket.Get(k)
+		if err == nil {
+			t.Fatal("Need Not Found, but got", k, "->", val)
+		}
+	}
+}
+
 func TestDB(t *testing.T) {
 	db := initDB()
 
@@ -73,6 +81,11 @@ func TestDBPersist(t *testing.T) {
 }
 
 const WAL_NEED_REC = `
+{"StateOper":"set","Key":"SPECTIAL","Value":"VALUE"}
+{"StateOper":"set","Key":"SPEC","Value":"VAL"}
+{"StateOper":"chk","Key":"","Value":""}
+{"StateOper":"set","Key":"MIDDLE","Value":"NEED!"}
+{"StateOper":"chkok","Key":"","Value":""}
 {"StateOper":"set","Key":"key211","Value":"value212"}
 {"StateOper":"set","Key":"key231","Value":"value232"}
 {"StateOper":"set","Key":"key634","Value":"value635"}
@@ -106,7 +119,16 @@ func TestRecoverFromLog(t *testing.T) {
 	}
 
 	inDb(t, db, m)
-	v, ok := db.Get("key657")
-	fmt.Println(v, ok)
+
+	spc := map[string]string{
+		"SPECTIAL": "VALUE",
+		"SPEC":     "VAL",
+	}
+	notInDb(t, db, spc)
+
+	mid := map[string]string{
+		"MIDDLE": "NEED!",
+	}
+	inDb(t, db, mid)
 
 }
