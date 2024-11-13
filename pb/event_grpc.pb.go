@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	EventService_SubscribeEvents_FullMethodName = "/eventservice.EventService/SubscribeEvents"
+	EventService_SubscribeEvents_FullMethodName = "/EventService.EventService/SubscribeEvents"
 )
 
 // EventServiceClient is the client API for EventService service.
@@ -116,7 +116,7 @@ type EventService_SubscribeEventsServer = grpc.ServerStreamingServer[Event]
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var EventService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "eventservice.EventService",
+	ServiceName: "EventService.EventService",
 	HandlerType: (*EventServiceServer)(nil),
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
@@ -126,5 +126,187 @@ var EventService_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
+	Metadata: "pb/event.proto",
+}
+
+const (
+	CRUDService_Set_FullMethodName = "/EventService.CRUDService/Set"
+	CRUDService_Get_FullMethodName = "/EventService.CRUDService/Get"
+	CRUDService_Del_FullMethodName = "/EventService.CRUDService/Del"
+)
+
+// CRUDServiceClient is the client API for CRUDService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// 事件存储服务
+type CRUDServiceClient interface {
+	Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*CRUDResponse, error)
+	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*CRUDResponse, error)
+	Del(ctx context.Context, in *DelRequest, opts ...grpc.CallOption) (*CRUDResponse, error)
+}
+
+type cRUDServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewCRUDServiceClient(cc grpc.ClientConnInterface) CRUDServiceClient {
+	return &cRUDServiceClient{cc}
+}
+
+func (c *cRUDServiceClient) Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*CRUDResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CRUDResponse)
+	err := c.cc.Invoke(ctx, CRUDService_Set_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cRUDServiceClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*CRUDResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CRUDResponse)
+	err := c.cc.Invoke(ctx, CRUDService_Get_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cRUDServiceClient) Del(ctx context.Context, in *DelRequest, opts ...grpc.CallOption) (*CRUDResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CRUDResponse)
+	err := c.cc.Invoke(ctx, CRUDService_Del_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// CRUDServiceServer is the server API for CRUDService service.
+// All implementations must embed UnimplementedCRUDServiceServer
+// for forward compatibility.
+//
+// 事件存储服务
+type CRUDServiceServer interface {
+	Set(context.Context, *SetRequest) (*CRUDResponse, error)
+	Get(context.Context, *GetRequest) (*CRUDResponse, error)
+	Del(context.Context, *DelRequest) (*CRUDResponse, error)
+	mustEmbedUnimplementedCRUDServiceServer()
+}
+
+// UnimplementedCRUDServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedCRUDServiceServer struct{}
+
+func (UnimplementedCRUDServiceServer) Set(context.Context, *SetRequest) (*CRUDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Set not implemented")
+}
+func (UnimplementedCRUDServiceServer) Get(context.Context, *GetRequest) (*CRUDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedCRUDServiceServer) Del(context.Context, *DelRequest) (*CRUDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Del not implemented")
+}
+func (UnimplementedCRUDServiceServer) mustEmbedUnimplementedCRUDServiceServer() {}
+func (UnimplementedCRUDServiceServer) testEmbeddedByValue()                     {}
+
+// UnsafeCRUDServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to CRUDServiceServer will
+// result in compilation errors.
+type UnsafeCRUDServiceServer interface {
+	mustEmbedUnimplementedCRUDServiceServer()
+}
+
+func RegisterCRUDServiceServer(s grpc.ServiceRegistrar, srv CRUDServiceServer) {
+	// If the following call pancis, it indicates UnimplementedCRUDServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&CRUDService_ServiceDesc, srv)
+}
+
+func _CRUDService_Set_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CRUDServiceServer).Set(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CRUDService_Set_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CRUDServiceServer).Set(ctx, req.(*SetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CRUDService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CRUDServiceServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CRUDService_Get_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CRUDServiceServer).Get(ctx, req.(*GetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CRUDService_Del_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CRUDServiceServer).Del(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CRUDService_Del_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CRUDServiceServer).Del(ctx, req.(*DelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// CRUDService_ServiceDesc is the grpc.ServiceDesc for CRUDService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var CRUDService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "EventService.CRUDService",
+	HandlerType: (*CRUDServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Set",
+			Handler:    _CRUDService_Set_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _CRUDService_Get_Handler,
+		},
+		{
+			MethodName: "Del",
+			Handler:    _CRUDService_Del_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "pb/event.proto",
 }

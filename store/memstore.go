@@ -30,6 +30,13 @@ func (m *MemStore) Get(key string) (string, error) {
 	return "", nil
 }
 
+func (m *MemStore) Del(key string) error {
+	m.l.Lock()
+	defer m.l.Unlock()
+	delete(m.m, key)
+	return nil
+}
+
 func (m *MemStore) SerializeAll() ([]byte, error) {
 	m.l.RLock()
 	defer m.l.RUnlock()

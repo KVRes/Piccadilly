@@ -12,6 +12,7 @@ import (
 type Client struct {
 	conn *grpc.ClientConn
 	ev   pb.EventServiceClient
+	crud pb.CRUDServiceClient
 }
 
 func NewClient(addr string) (*Client, error) {
@@ -19,8 +20,11 @@ func NewClient(addr string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	ev := pb.NewEventServiceClient(conn)
-	return &Client{conn, ev}, nil
+	return &Client{
+		conn: conn,
+		ev:   pb.NewEventServiceClient(conn),
+		crud: pb.NewCRUDServiceClient(conn),
+	}, nil
 }
 
 func (c *Client) Close() error {
@@ -63,4 +67,22 @@ func (c *Client) Watch(key string, eventType watcher.EventType) (Subscribed, err
 		}
 	}()
 	return Subscribed{ch, unsubscribe}, nil
+}
+
+func (c *Client) Get(key string) (string, error) {
+	resp, err := c.crud.Get(context.Background(), &pb.GetRequest{Key: key})
+	if err != nil {
+		return "", err
+	}
+	return resp.GetVal(), nil
+}
+
+func (c *Client) Set(key, val string) error {
+	_, err := c.crud.Set(context.Background(), &pb.SetRequest{Key: key, Val: val})
+	return err
+}
+
+func (c *Client) Del(key string) error {
+	_, err := c.crud.Del(context.Background(), &pb.DelRequest{Key: key})
+	return err
 }

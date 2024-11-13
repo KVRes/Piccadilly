@@ -1,5 +1,5 @@
 syntax = "proto3";
-package eventservice;
+package EventService;
 option go_package = "./pb";
 
 // 定义事件消息结构
@@ -18,4 +18,30 @@ message SubscribeRequest {
 service EventService {
     // 服务端流式 RPC，用于推送事件
     rpc SubscribeEvents(SubscribeRequest) returns (stream Event) {}
+}
+
+
+message SetRequest {
+    string key = 1;
+    string val = 2;
+}
+
+message DelRequest {
+    string key = 1;
+}
+
+message GetRequest {
+    string key = 1;
+}
+
+message CRUDResponse {
+    bool ok = 1;
+    string val = 2;
+}
+
+// 事件存储服务
+service CRUDService {
+    rpc Set(SetRequest) returns (CRUDResponse) {}
+    rpc Get(GetRequest) returns (CRUDResponse) {}
+    rpc Del(DelRequest) returns (CRUDResponse) {}
 }

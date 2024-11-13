@@ -5,6 +5,7 @@ import "errors"
 type Store interface {
 	Get(key string) (string, error)
 	Set(key, value string) error
+	Del(key string) error
 	SerializeAll() ([]byte, error)
 	Load(data []byte) error
 }

@@ -34,6 +34,11 @@ func (st *SwissTableStore) Set(key, value string) error {
 	return nil
 }
 
+func (st *SwissTableStore) Del(key string) error {
+	st.CsMap.Delete(key)
+	return nil
+}
+
 func (st *SwissTableStore) SerializeAll() ([]byte, error) {
 	return st.CsMap.MarshalJSON()
 }

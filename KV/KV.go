@@ -35,19 +35,28 @@ func (b *BucketConfig) Normalise() {
 	}
 }
 
-func ToWRequest(kvp types.KVPair) wRequest {
-	return wRequest{
+type modifyReqType int
+
+const (
+	modifyReqSet modifyReqType = 1
+	modifyReqDel modifyReqType = 2
+)
+
+func toReq(kvp types.KVPair, t modifyReqType) internalReq {
+	return internalReq{
 		KVPair: kvp,
 		done:   make(chan error),
+		t:      t,
 	}
 }
 
-type wRequest struct {
+type internalReq struct {
+	t modifyReqType
 	types.KVPair
 	done chan error
 }
 
-func (wr *wRequest) Close() {
+func (wr *internalReq) Close() {
 	close(wr.done)
 }
 
@@ -55,7 +64,7 @@ type Bucket struct {
 	store    store.Store
 	wal      WAL.Provider
 	cfg      BucketConfig
-	wChannel chan wRequest
+	wChannel chan internalReq
 	Watcher  *watcher.KeyWatcher
 }
 
@@ -112,7 +121,7 @@ func (b *Bucket) StartService(cfg BucketConfig) error {
 	// Give daemon a lock!
 	go b.daemon()
 	go b.WriteChannel()
-	b.wChannel = make(chan wRequest, cfg.WBuffer)
+	b.wChannel = make(chan internalReq, cfg.WBuffer)
 	return nil
 }
 
@@ -126,8 +135,13 @@ func (b *Bucket) WriteChannel() {
 			go b.appendToWChannel(kv)
 			continue
 		}
-		go func(kvp wRequest, idx int) {
-			kvp.done <- b.store.Set(kv.Key, kv.Value)
+		go func(kvp internalReq, idx int) {
+			switch kvp.t {
+			case modifyReqSet:
+				kvp.done <- b.store.Set(kvp.Key, kvp.Value)
+			case modifyReqDel:
+				kvp.done <- b.store.Del(kvp.Key)
+			}
 			keyBuf.keys[idx] = ""
 		}(kv, empty)
 		go b.Watcher.EmitEvent(kv.Key, watcher.EventSet)
@@ -135,7 +149,7 @@ func (b *Bucket) WriteChannel() {
 
 }
 
-func (b *Bucket) appendToWChannel(req wRequest) {
+func (b *Bucket) appendToWChannel(req internalReq) {
 	b.wChannel <- req
 }
 
@@ -197,7 +211,18 @@ func (b *Bucket) Set(key, value string) error {
 	if _, err := b.wal.Append(rec); err != nil {
 		return err
 	}
-	req := ToWRequest(types.KVPair{Key: key, Value: value})
+	req := toReq(types.KVPair{Key: key, Value: value}, modifyReqSet)
+	defer req.Close()
+	b.appendToWChannel(req)
+	return <-req.done
+}
+
+func (b *Bucket) Del(key string) error {
+	rec := WAL.NewStateOperRecord(WAL.StateOperDel).WithKeyValue(key, "")
+	if _, err := b.wal.Append(rec); err != nil {
+		return err
+	}
+	req := toReq(types.KVPair{Key: key}, modifyReqDel)
 	defer req.Close()
 	b.appendToWChannel(req)
 	return <-req.done
