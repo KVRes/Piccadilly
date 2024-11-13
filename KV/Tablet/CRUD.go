@@ -10,7 +10,7 @@ func (b *Bucket) _modifyOper(eventType types.EventType, key string, value string
 	if _, err := b.wal.Append(rec); err != nil {
 		return err
 	}
-	req := toReq(types.KVPair{Key: key}, eventType)
+	req := toReq(types.KVPair{Key: key, Value: value}, eventType)
 	defer req.Close()
 	b.appendToWChannel(req)
 	return <-req.done

@@ -28,8 +28,12 @@ func initDB() *Tablet.Bucket {
 }
 
 func dataset() map[string]string {
+	return datasetN(1000)
+}
+
+func datasetN(n int) map[string]string {
 	m := make(map[string]string)
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < n; i++ {
 		m["key"+strconv.Itoa(i)] = "value" + strconv.Itoa(i+1)
 	}
 	return m

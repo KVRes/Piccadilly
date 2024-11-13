@@ -12,14 +12,14 @@ type ManagerService struct {
 }
 
 func (m ManagerService) Connect(ctx context.Context, request *pb.ConnectRequest) (*pb.ConnectResponse, error) {
-	_, err := m.Db.Connect(
+	_, ns, err := m.Db.Connect(
 		request.GetNamespace(),
 		KV.ConnectStrategy(request.GetStrategy()),
 		KV.ConcurrentModel(request.GetModel()))
 	if err != nil {
 		return nil, err
 	}
-	return &pb.ConnectResponse{Ok: err == nil}, nil
+	return &pb.ConnectResponse{Ok: err == nil, Namespace: ns}, nil
 }
 
 var _ pb.ManagerServiceServer = &ManagerService{}

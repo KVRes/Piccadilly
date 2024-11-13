@@ -2,7 +2,6 @@ package serv
 
 import (
 	"github.com/KVRes/Piccadilly/KV"
-	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/pb"
 	"github.com/KVRes/Piccadilly/serv/grpcImpl"
 	"google.golang.org/grpc"
@@ -11,7 +10,6 @@ import (
 type Server struct {
 	*grpc.Server
 	db         *KV.Database
-	fakeTablet *Tablet.Bucket // need replace
 }
 
 func NewServer(basePath string) *Server {

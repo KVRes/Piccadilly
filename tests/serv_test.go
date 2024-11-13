@@ -8,7 +8,7 @@ import (
 )
 
 func TestServ(t *testing.T) {
-	m := dataset()
+	m := datasetN(100_000)
 	db := serv.NewServer("./data")
 	go db.ServeTCP("127.0.0.1:12306")
 
@@ -16,7 +16,7 @@ func TestServ(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = cli.Connect("/kevin/zonda", KV.CreateIfNotExist, KV.Linear)
+	err = cli.Connect("/kevin/zonda", KV.CreateIfNotExist, KV.Buffer)
 	if err != nil {
 		t.Fatal(err)
 	}

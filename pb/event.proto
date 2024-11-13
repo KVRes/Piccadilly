@@ -70,6 +70,7 @@ message ConnectRequest {
 message ConnectResponse {
     bool ok = 1;
     bool created = 2;
+    string namespace = 3;
 }
 
 service ManagerService {

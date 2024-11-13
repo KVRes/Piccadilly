@@ -39,24 +39,24 @@ const (
 	Buffer
 )
 
-func (d *Database) Connect(path string, c ConnectStrategy, concu ConcurrentModel) (*PNode, error) {
+func (d *Database) Connect(path string, c ConnectStrategy, concu ConcurrentModel) (*PNode, string, error) {
 	path = pathToNamespace(path)
 	pnode := d.NsGet(path)
 	var err error
 	if pnode == nil || pnode.LoadTime == 0 {
 		pnode, err = d.loadNamespace(path, c)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 	}
 	if pnode.Started {
-		return pnode, nil
+		return pnode, path, nil
 	}
 
 	d.nsLck.Lock()
 	defer d.nsLck.Unlock()
 	if pnode.Started {
-		return pnode, nil
+		return pnode, path, nil
 	}
 	wKeySet := 100
 	if concu == Linear {
@@ -73,7 +73,7 @@ func (d *Database) Connect(path string, c ConnectStrategy, concu ConcurrentModel
 	if err == nil {
 		pnode.Started = true
 	}
-	return pnode, nil
+	return pnode, path, nil
 }
 
 type ConnectStrategy int
