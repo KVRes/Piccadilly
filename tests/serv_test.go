@@ -32,10 +32,11 @@ func TestServ(t *testing.T) {
 	}
 
 	elapsed := time.Since(start)
-	t.Log("Time:", elapsed)
+	t.Log("WR Time:", elapsed)
 	rps := float64(N) / elapsed.Seconds()
-	t.Log("Perf:", rps, "RPS")
+	t.Log("WR Perf:", rps, "RPS")
 
+	start = time.Now()
 	for k, v := range m {
 		val, err := cli.Get(k)
 		if err != nil {
@@ -45,5 +46,9 @@ func TestServ(t *testing.T) {
 			t.Fatal("expected", v, "got", val)
 		}
 	}
+	elapsed = time.Since(start)
+	t.Log("RD Time:", elapsed)
+	rps = float64(N) / elapsed.Seconds()
+	t.Log("RD Perf:", rps, "RPS")
 
 }

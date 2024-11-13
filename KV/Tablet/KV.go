@@ -23,11 +23,11 @@ type BucketConfig struct {
 
 func (b *BucketConfig) Normalise() {
 	if b.WBuffer <= 0 {
-		b.WBuffer = 100
+		b.WBuffer = 128
 	}
 
 	if b.WKeySet <= 0 {
-		b.WKeySet = 100
+		b.WKeySet = 32
 	}
 
 	if b.FlushInterval <= 0 {
