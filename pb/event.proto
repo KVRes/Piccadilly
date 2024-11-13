@@ -1,0 +1,21 @@
+syntax = "proto3";
+package eventservice;
+option go_package = "./pb";
+
+// 定义事件消息结构
+message Event {
+    int32 event_type = 1;
+    string event_val = 2;
+}
+
+// 定义用于订阅的请求
+message SubscribeRequest {
+    string key = 1;
+    int32 event_type = 2;
+}
+
+// 事件推送服务
+service EventService {
+    // 服务端流式 RPC，用于推送事件
+    rpc SubscribeEvents(SubscribeRequest) returns (stream Event) {}
+}

@@ -1,4 +1,4 @@
-package Piccadilly
+package watcher
 
 import (
 	"sync"
@@ -10,7 +10,7 @@ type KeyWatcher struct {
 }
 
 type watcher struct {
-	ch       chan struct{}
+	sub      Subscriber
 	et       EventType
 	obsolete bool
 }
@@ -19,15 +19,13 @@ func NewKeyWatcher() *KeyWatcher {
 	return &KeyWatcher{ws: make(map[string][]watcher)}
 }
 
-func (w *KeyWatcher) Watch(key string, eventType EventType) <-chan struct{} {
-	ch := make(chan struct{})
+func (w *KeyWatcher) Watch(key string, eventType EventType, subscriber Subscriber) {
 	w.l.Lock()
 	defer w.l.Unlock()
 	if _, ok := w.ws[key]; !ok {
 		w.ws[key] = []watcher{}
 	}
-	w.ws[key] = append(w.ws[key], watcher{ch, eventType, false})
-	return ch
+	w.ws[key] = append(w.ws[key], watcher{subscriber, eventType, false})
 }
 
 func (w *KeyWatcher) EmitEvent(key string, eventType EventType) {
@@ -41,7 +39,7 @@ func (w *KeyWatcher) EmitEvent(key string, eventType EventType) {
 			continue
 		}
 		if w.et == eventType {
-			w.ch <- struct{}{}
+			w.sub.Notify(key, eventType)
 		}
 	}
 }
@@ -51,7 +49,7 @@ func (w *KeyWatcher) GC() {
 	defer w.l.Unlock()
 	for k, v := range w.ws {
 		w.ws[k] = filter(v, func(w watcher) bool {
-			close(w.ch)
+			w.sub.Close()
 			return !w.obsolete
 		})
 

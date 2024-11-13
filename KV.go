@@ -7,6 +7,7 @@ import (
 
 	cml "github.com/KVRes/Piccadilly/commitlog"
 	"github.com/KVRes/Piccadilly/store"
+	"github.com/KVRes/Piccadilly/watcher"
 )
 
 type BucketConfig struct {
@@ -43,14 +44,14 @@ type Bucket struct {
 	cmtLog   cml.CommitLog
 	cfg      BucketConfig
 	wChannel chan wRequest
-	Watcher  *KeyWatcher
+	Watcher  *watcher.KeyWatcher
 }
 
 func NewBucket(store store.Store, cmtLog cml.CommitLog) *Bucket {
 	return &Bucket{
 		store:   store,
 		cmtLog:  cmtLog,
-		Watcher: NewKeyWatcher(),
+		Watcher: watcher.NewKeyWatcher(),
 	}
 }
 
@@ -130,8 +131,7 @@ func (b *Bucket) WriteChannel() {
 			kvp.done <- b.Set(kv.key, kv.value)
 			keyBuf.keys[idx] = ""
 		}(kv, empty)
-		go b.Watcher.EmitEvent(kv.key, EventSet)
-
+		go b.Watcher.EmitEvent(kv.key, watcher.EventSet)
 	}
 
 }
