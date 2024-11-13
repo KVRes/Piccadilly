@@ -1,7 +1,6 @@
 package KV
 
 import (
-	"errors"
 	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/WAL"
 	"github.com/KVRes/Piccadilly/store"
@@ -23,26 +22,20 @@ type Database struct {
 	nsLck     sync.RWMutex
 	Namespace Namespace
 	basePath  string
-	NoFlush   bool
+	Template  DatabaseTemplate
 }
 
 func NewDatabase(basePath string) *Database {
 	return &Database{
 		Namespace: make(Namespace),
 		basePath:  basePath,
+		Template:  DefaultDatabaseTemplate(),
 	}
 }
 
-type ConcurrentModel int
-
-const (
-	Linear ConcurrentModel = iota
-	Buffer
-)
-
 func (d *Database) Connect(path string, c ConnectStrategy, concu ConcurrentModel) (*PNode, string, error) {
 	path = pathToNamespace(path)
-	pnode := d.NsGet(path)
+	pnode := d.nsGet(path)
 	var err error
 	if pnode == nil || pnode.LoadTime == 0 {
 		pnode, err = d.loadNamespace(path, c)
@@ -59,17 +52,17 @@ func (d *Database) Connect(path string, c ConnectStrategy, concu ConcurrentModel
 	if pnode.Started {
 		return pnode, path, nil
 	}
-	wKeySet := 100
+	wKeySet := d.Template.KeySize
 	if concu == Linear {
 		wKeySet = 1
 	}
 	err = pnode.Bkt.StartService(Tablet.BucketConfig{
-		WALPath:       d.WALPath(path),
-		PersistPath:   d.PersistPath(path),
-		FlushInterval: 5 * time.Second,
-		WBuffer:       100,
+		WALPath:       d.walPath(path),
+		PersistPath:   d.persistPath(path),
+		FlushInterval: d.Template.FlushInterval,
+		WBuffer:       d.Template.WBuffer,
 		WKeySet:       wKeySet,
-		NoFlush:       d.NoFlush,
+		NoFlush:       d.Template.NoFlush,
 	})
 	if err == nil {
 		pnode.Started = true
@@ -77,24 +70,15 @@ func (d *Database) Connect(path string, c ConnectStrategy, concu ConcurrentModel
 	return pnode, path, nil
 }
 
-type ConnectStrategy int
-
-const (
-	CreateIfNotExist ConnectStrategy = iota
-	ErrorIfNotExist
-)
-
-func (d *Database) NsGet(path string) *PNode {
+func (d *Database) nsGet(path string) *PNode {
 	d.nsLck.RLock()
 	defer d.nsLck.RUnlock()
-	return d._nsGet(path)
+	return d.Namespace[path]
 }
 
-var ErrNotStarted = errors.New("not started")
-var ErrNotLoaded = errors.New("not loaded")
-
 func (d *Database) MustGetStartedPnode(path string) (*PNode, error) {
-	pnode := d.NsGet(path)
+	path = pathToNamespace(path)
+	pnode := d.nsGet(path)
 	if pnode == nil || pnode.LoadTime == 0 {
 		return nil, ErrNotLoaded
 	}
@@ -104,34 +88,34 @@ func (d *Database) MustGetStartedPnode(path string) (*PNode, error) {
 	return pnode, nil
 }
 
-func (d *Database) _nsGet(path string) *PNode {
-	return d.Namespace[pathToNamespace(path)]
-}
-
 func (d *Database) loadNamespace(path string, c ConnectStrategy) (*PNode, error) {
 	d.nsLck.Lock()
 	defer d.nsLck.Unlock()
-	pnode := d._nsGet(path)
+	pnode := d.Namespace[path]
 	if pnode == nil {
 		pnode = &PNode{}
-		d.Namespace[pathToNamespace(path)] = pnode
+		d.Namespace[path] = pnode
 	}
 	if pnode.LoadTime != 0 {
 		return pnode, nil
 	}
-	if !utils.IsExist(d.NamespacePath(path)) {
+	if !utils.IsExist(d.namespacePath(path)) {
 		if c != CreateIfNotExist {
 			return nil, os.ErrNotExist
 		}
-		os.MkdirAll(d.NamespacePath(path), 0755)
+		os.MkdirAll(d.namespacePath(path), 0755)
 	}
 
-	wal, err := WAL.NewJsonWALProvider(d.WALPath(path))
+	wal, err := WAL.NewWAL(d.Template.WALType, d.walPath(path))
 	if err != nil {
 		return pnode, err
 	}
 
-	pnode.Bkt = Tablet.NewBucket(store.NewSwissTableStore(), wal)
+	str, err := store.NewStore(d.Template.StoreType)
+	if err != nil {
+		return pnode, err
+	}
+	pnode.Bkt = Tablet.NewBucket(str, wal)
 	pnode.LoadTime = time.Now().Unix()
 	return pnode, nil
 }

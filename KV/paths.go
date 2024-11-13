@@ -30,7 +30,11 @@ func filterString(str string) string {
 
 func (d *Database) NamespacePath(path string) string {
 	path = pathToNamespace(path)
-	return filepath.Join(path)
+	return filepath.Join(d.basePath, path)
+}
+
+func (d *Database) namespacePath(path string) string {
+	return filepath.Join(d.basePath, path)
 }
 
 func (d *Database) WALPath(path string) string {
@@ -38,7 +42,15 @@ func (d *Database) WALPath(path string) string {
 	return filepath.Join(path, "wal.json")
 }
 
+func (d *Database) walPath(path string) string {
+	return filepath.Join(path, "wal.json")
+}
+
 func (d *Database) PersistPath(path string) string {
 	path = pathToNamespace(path)
+	return filepath.Join(path, "persist.json")
+}
+
+func (d *Database) persistPath(path string) string {
 	return filepath.Join(path, "persist.json")
 }

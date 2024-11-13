@@ -11,7 +11,7 @@ import (
 )
 
 func TestDBBenchMark(t *testing.T) {
-	wal := WAL.NewFakeWAL()
+	wal := WAL.NewFakeWALProvider()
 
 	db := Tablet.NewBucket(store.NewSwissTableStore(), wal)
 
