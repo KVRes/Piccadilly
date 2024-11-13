@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"github.com/KVRes/Piccadilly/KV"
+	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/WAL"
 	"github.com/KVRes/Piccadilly/store"
 	"os"
@@ -52,8 +52,8 @@ func TestRecoverFromLog(t *testing.T) {
 		panic(err)
 	}
 
-	db := KV.NewBucket(store.NewSwissTableStore(), wal)
-	err = db.StartService(KV.BucketConfig{
+	db := Tablet.NewBucket(store.NewSwissTableStore(), wal)
+	err = db.StartService(Tablet.BucketConfig{
 		WALPath:     WAL_F,
 		PersistPath: PERSIST_F,
 	})

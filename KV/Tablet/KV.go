@@ -1,4 +1,4 @@
-package KV
+package Tablet
 
 import (
 	"github.com/KVRes/Piccadilly/types"

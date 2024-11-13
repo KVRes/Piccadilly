@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/KVRes/Piccadilly/KV"
+	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"log"
 
 	"github.com/KVRes/Piccadilly/WAL"
@@ -15,9 +15,9 @@ func main() {
 		return
 	}
 
-	db := KV.NewBucket(store.NewSwissTableStore(), cmtLog)
+	db := Tablet.NewBucket(store.NewSwissTableStore(), cmtLog)
 
-	db.StartService(KV.BucketConfig{
+	db.StartService(Tablet.BucketConfig{
 		WALPath:     "commitlog.json",
 		PersistPath: "persist.json",
 	})

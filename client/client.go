@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"github.com/KVRes/Piccadilly/KV"
 	"github.com/KVRes/Piccadilly/types"
 
 	"github.com/KVRes/Piccadilly/pb"
@@ -13,6 +14,8 @@ type Client struct {
 	conn *grpc.ClientConn
 	ev   pb.EventServiceClient
 	crud pb.CRUDServiceClient
+	mgr  pb.ManagerServiceClient
+	path string
 }
 
 func NewClient(addr string) (*Client, error) {
@@ -24,6 +27,7 @@ func NewClient(addr string) (*Client, error) {
 		conn: conn,
 		ev:   pb.NewEventServiceClient(conn),
 		crud: pb.NewCRUDServiceClient(conn),
+		mgr:  pb.NewManagerServiceClient(conn),
 	}, nil
 }
 
@@ -37,7 +41,9 @@ type Subscribed struct {
 }
 
 func (c *Client) Watch(key string, eventType types.EventType) (Subscribed, error) {
-	stream, err := c.ev.SubscribeEvents(context.Background(), &pb.SubscribeRequest{Key: key, EventType: int32(eventType)})
+	stream, err := c.ev.SubscribeEvents(context.Background(), &pb.SubscribeRequest{
+		Namespace: c.path,
+		Key:       key, EventType: int32(eventType)})
 	if err != nil {
 		return Subscribed{}, err
 	}
@@ -70,7 +76,10 @@ func (c *Client) Watch(key string, eventType types.EventType) (Subscribed, error
 }
 
 func (c *Client) Get(key string) (string, error) {
-	resp, err := c.crud.Get(context.Background(), &pb.GetRequest{Key: key})
+	resp, err := c.crud.Get(context.Background(), &pb.GetRequest{
+		Namespace: c.path,
+		Key:       key,
+	})
 	if err != nil {
 		return "", err
 	}
@@ -78,11 +87,22 @@ func (c *Client) Get(key string) (string, error) {
 }
 
 func (c *Client) Set(key, val string) error {
-	_, err := c.crud.Set(context.Background(), &pb.SetRequest{Key: key, Val: val})
+	_, err := c.crud.Set(context.Background(), &pb.SetRequest{
+		Namespace: c.path,
+		Key:       key, Val: val})
 	return err
 }
 
 func (c *Client) Del(key string) error {
-	_, err := c.crud.Del(context.Background(), &pb.DelRequest{Key: key})
+	_, err := c.crud.Del(context.Background(), &pb.DelRequest{
+		Namespace: c.path, Key: key})
+	return err
+}
+
+func (c *Client) Connect(path string, strategy KV.ConnectStrategy, concu KV.ConcurrentModel) error {
+	_, err := c.mgr.Connect(context.Background(), &pb.ConnectRequest{Namespace: path, Strategy: pb.ConnectionStrategy(int32(strategy)), Model: pb.ConcurrentModel(int32(concu))})
+	if err == nil {
+		c.path = path
+	}
 	return err
 }

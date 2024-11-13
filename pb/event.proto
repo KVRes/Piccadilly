@@ -10,8 +10,9 @@ message Event {
 
 // 定义用于订阅的请求
 message SubscribeRequest {
-    string key = 1;
-    int32 event_type = 2;
+    string namespace = 1;
+    string key = 2;
+    int32 event_type = 3;
 }
 
 // 事件推送服务
@@ -22,16 +23,19 @@ service EventService {
 
 
 message SetRequest {
-    string key = 1;
-    string val = 2;
+    string namespace = 1;
+    string key = 2;
+    string val = 3;
 }
 
 message DelRequest {
-    string key = 1;
+    string namespace = 1;
+    string key = 2;
 }
 
 message GetRequest {
-    string key = 1;
+    string namespace = 1;
+    string key = 2;
 }
 
 message CRUDResponse {
@@ -44,4 +48,30 @@ service CRUDService {
     rpc Set(SetRequest) returns (CRUDResponse) {}
     rpc Get(GetRequest) returns (CRUDResponse) {}
     rpc Del(DelRequest) returns (CRUDResponse) {}
+}
+
+enum ConnectionStrategy {
+    FailIfNotExists = 0;
+    CreateIfNotExists = 1;
+}
+
+enum ConcurrentModel {
+    Linear = 0;
+    Buffer = 1;
+}
+
+message ConnectRequest {
+    string namespace = 1;
+    string token = 2; // reserved for future
+    ConnectionStrategy strategy = 3;
+    ConcurrentModel model = 4;
+}
+
+message ConnectResponse {
+    bool ok = 1;
+    bool created = 2;
+}
+
+service ManagerService {
+    rpc Connect(ConnectRequest) returns (ConnectResponse) {}
 }

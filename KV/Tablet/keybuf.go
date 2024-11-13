@@ -1,4 +1,4 @@
-package KV
+package Tablet
 
 type KeyBuf struct {
 	keys []string

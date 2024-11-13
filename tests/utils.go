@@ -1,22 +1,22 @@
 package tests
 
 import (
-	"github.com/KVRes/Piccadilly/KV"
+	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/WAL"
 	"github.com/KVRes/Piccadilly/store"
 	"strconv"
 	"testing"
 )
 
-func initDB() *KV.Bucket {
+func initDB() *Tablet.Bucket {
 	wal, err := WAL.NewJsonWALProvider("WAL.json")
 	if err != nil {
 		panic(err)
 	}
 
-	db := KV.NewBucket(store.NewSwissTableStore(), wal)
+	db := Tablet.NewBucket(store.NewSwissTableStore(), wal)
 
-	err = db.StartService(KV.BucketConfig{
+	err = db.StartService(Tablet.BucketConfig{
 		WALPath:     "WAL.json",
 		PersistPath: "persist.json",
 	})
@@ -35,7 +35,7 @@ func dataset() map[string]string {
 	return m
 }
 
-func inDb(t *testing.T, bucket *KV.Bucket, m map[string]string) {
+func inDb(t *testing.T, bucket *Tablet.Bucket, m map[string]string) {
 	for k, v := range m {
 		val, err := bucket.Get(k)
 		if err != nil {
@@ -47,7 +47,7 @@ func inDb(t *testing.T, bucket *KV.Bucket, m map[string]string) {
 	}
 }
 
-func notInDb(t *testing.T, bucket *KV.Bucket, m map[string]string) {
+func notInDb(t *testing.T, bucket *Tablet.Bucket, m map[string]string) {
 	for k, _ := range m {
 		val, err := bucket.Get(k)
 		if err == nil {
