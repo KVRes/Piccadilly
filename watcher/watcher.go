@@ -71,6 +71,12 @@ type Event struct {
 	Key       string
 }
 
+type ErrorableEvent struct {
+	Event
+	Err     error
+	IsError bool
+}
+
 type EventType int
 
 const (
