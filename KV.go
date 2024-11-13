@@ -34,6 +34,10 @@ type wRequest struct {
 	done chan error
 }
 
+func (wr *wRequest) Close() {
+	close(wr.done)
+}
+
 type Bucket struct {
 	store    store.Store
 	cmtLog   cml.CommitLog
@@ -192,6 +196,7 @@ func (b *Bucket) Set(key, value string) error {
 		return err
 	}
 	req := KVPair{key, value}.ToWRequest()
+	defer req.Close()
 	b.appendToWChannel(req)
 	return <-req.done
 }
