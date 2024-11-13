@@ -2,11 +2,12 @@ package tests
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/WAL"
 	"github.com/KVRes/Piccadilly/store"
-	"testing"
-	"time"
 )
 
 func TestDBBenchMark(t *testing.T) {
@@ -18,9 +19,9 @@ func TestDBBenchMark(t *testing.T) {
 		WALPath:     "WAL.json",
 		PersistPath: "empty.json",
 		NoFlush:     true,
-		WKeySet:     32,
+		WKeySet:     5,
 	})
-	N := 100_0000
+	N := 500_0000
 	m := datasetN(N)
 
 	start := time.Now()
