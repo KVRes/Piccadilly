@@ -15,7 +15,7 @@ func main() {
 		return
 	}
 
-	db := Piccadilly.NewBucket(store.NewMemStore(), cmtLog)
+	db := Piccadilly.NewBucket(store.NewSwissTableStore(), cmtLog)
 
 	db.StartService(Piccadilly.BucketConfig{
 		CommitLogPath: "commitlog.json",
