@@ -5,57 +5,8 @@ import (
 	"github.com/KVRes/Piccadilly/WAL"
 	"github.com/KVRes/Piccadilly/store"
 	"os"
-	"strconv"
 	"testing"
 )
-
-func initDB() *KV.Bucket {
-	wal, err := WAL.NewJsonWALProvider("WAL.json")
-	if err != nil {
-		panic(err)
-	}
-
-	db := KV.NewBucket(store.NewSwissTableStore(), wal)
-
-	err = db.StartService(KV.BucketConfig{
-		WALPath:     "WAL.json",
-		PersistPath: "persist.json",
-	})
-
-	if err != nil {
-		panic(err)
-	}
-	return db
-}
-
-func dataset() map[string]string {
-	m := make(map[string]string)
-	for i := 0; i < 1000; i++ {
-		m["key"+strconv.Itoa(i)] = "value" + strconv.Itoa(i+1)
-	}
-	return m
-}
-
-func inDb(t *testing.T, bucket *KV.Bucket, m map[string]string) {
-	for k, v := range m {
-		val, err := bucket.Get(k)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if val != v {
-			t.Fatal("expected", v, "got", val)
-		}
-	}
-}
-
-func notInDb(t *testing.T, bucket *KV.Bucket, m map[string]string) {
-	for k, _ := range m {
-		val, err := bucket.Get(k)
-		if err == nil {
-			t.Fatal("Need Not Found, but got", k, "->", val)
-		}
-	}
-}
 
 func TestDB(t *testing.T) {
 	db := initDB()
