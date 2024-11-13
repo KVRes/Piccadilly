@@ -23,6 +23,7 @@ type Database struct {
 	nsLck     sync.RWMutex
 	Namespace Namespace
 	basePath  string
+	NoFlush   bool
 }
 
 func NewDatabase(basePath string) *Database {
@@ -68,7 +69,7 @@ func (d *Database) Connect(path string, c ConnectStrategy, concu ConcurrentModel
 		FlushInterval: 5 * time.Second,
 		WBuffer:       100,
 		WKeySet:       wKeySet,
-		NoFlush:       false,
+		NoFlush:       d.NoFlush,
 	})
 	if err == nil {
 		pnode.Started = true
