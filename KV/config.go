@@ -8,7 +8,6 @@ import (
 )
 
 type DatabaseTemplate struct {
-	KeySize       int
 	WBuffer       int
 	FlushInterval time.Duration
 	NoFlush       bool
@@ -19,7 +18,6 @@ type DatabaseTemplate struct {
 
 func DefaultDatabaseTemplate() DatabaseTemplate {
 	return DatabaseTemplate{
-		KeySize:       5,
 		WBuffer:       128,
 		FlushInterval: 1 * time.Minute,
 		NoFlush:       false,

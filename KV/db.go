@@ -52,16 +52,11 @@ func (d *Database) Connect(path string, c ConnectStrategy, concu Tablet.Concurre
 	if pnode.Started {
 		return pnode, path, nil
 	}
-	wKeySet := d.Template.KeySize
-	if concu == Tablet.Linear {
-		wKeySet = 1
-	}
 	err = pnode.Bkt.StartService(Tablet.BucketConfig{
 		WALPath:       d.walPath(path),
 		PersistPath:   d.persistPath(path),
 		FlushInterval: d.Template.FlushInterval,
 		WBuffer:       d.Template.WBuffer,
-		WKeySet:       wKeySet,
 		NoFlush:       d.Template.NoFlush,
 		WModel:        concu,
 	})
@@ -104,7 +99,7 @@ func (d *Database) loadNamespace(path string, c ConnectStrategy) (*PNode, error)
 		if c != CreateIfNotExist {
 			return nil, os.ErrNotExist
 		}
-		os.MkdirAll(d.namespacePath(path), 0755)
+		_ = os.MkdirAll(d.namespacePath(path), 0755)
 	}
 
 	wal, err := WAL.NewWAL(d.Template.WALType, d.walPath(path))

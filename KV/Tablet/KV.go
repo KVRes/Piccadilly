@@ -16,7 +16,6 @@ type BucketConfig struct {
 	PersistPath   string
 	FlushInterval time.Duration
 	WBuffer       int
-	WKeySet       int
 	NoFlush       bool
 	WModel        ConcurrentModel
 }
@@ -26,12 +25,8 @@ func (b *BucketConfig) Normalise() {
 		b.WBuffer = 128
 	}
 
-	if b.WKeySet <= 0 {
-		b.WKeySet = 32
-	}
-
 	if b.FlushInterval <= 0 {
-		b.FlushInterval = 5 * time.Second
+		b.FlushInterval = 60 * time.Second
 	}
 }
 

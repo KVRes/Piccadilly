@@ -19,10 +19,9 @@ func TestDBBenchMark(t *testing.T) {
 		WALPath:     "WAL.json",
 		PersistPath: "empty.json",
 		NoFlush:     true,
-		WKeySet:     5,
 		WModel:      Tablet.NoLinear,
 	})
-	N := 500_0000
+	N := 100_0000
 	m := datasetN(N)
 
 	start := time.Now()

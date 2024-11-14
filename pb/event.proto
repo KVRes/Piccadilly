@@ -57,7 +57,7 @@ enum ConnectionStrategy {
 
 enum ConcurrentModel {
     Linear = 0;
-    Buffer = 1;
+    NoLinear = 1;
 }
 
 message ConnectRequest {
