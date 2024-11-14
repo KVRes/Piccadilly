@@ -2,14 +2,14 @@ package grpcImpl
 
 import (
 	"github.com/KVRes/Piccadilly/KV"
-	Watcher2 "github.com/KVRes/Piccadilly/KV/Watcher"
+	"github.com/KVRes/Piccadilly/KV/Watcher"
 	"github.com/KVRes/Piccadilly/pb"
 	"github.com/KVRes/Piccadilly/types"
 )
 
 type EventService struct {
 	pb.UnimplementedEventServiceServer
-	Watcher *Watcher2.KeyWatcher
+	Watcher *Watcher.KeyWatcher
 	Db      *KV.Database
 }
 
@@ -33,7 +33,7 @@ func (s *EventService) SubscribeEvents(req *pb.SubscribeRequest, stream pb.Event
 var _ pb.EventServiceServer = &EventService{}
 
 type GRPCSubscriber struct {
-	base   Watcher2.BaseSubscriber
+	base   Watcher.BaseSubscriber
 	stream pb.EventService_SubscribeEventsServer
 	off    chan struct{}
 }
@@ -48,8 +48,8 @@ func (s *GRPCSubscriber) Close() error {
 	return nil
 }
 
-func (s *GRPCSubscriber) SetBaseSubscriber(w Watcher2.BaseSubscriber) {
+func (s *GRPCSubscriber) SetBaseSubscriber(w Watcher.BaseSubscriber) {
 	s.base = w
 }
 
-var _ Watcher2.Subscriber = &GRPCSubscriber{}
+var _ Watcher.Subscriber = &GRPCSubscriber{}

@@ -39,18 +39,18 @@ func (d *Database) namespacePath(path string) string {
 
 func (d *Database) WALPath(path string) string {
 	path = pathToNamespace(path)
-	return filepath.Join(path, "wal.json")
+	return filepath.Join(d.basePath, path, "wal.json")
 }
 
 func (d *Database) walPath(path string) string {
-	return filepath.Join(path, "wal.json")
+	return filepath.Join(d.basePath, path, "wal.json")
 }
 
 func (d *Database) PersistPath(path string) string {
 	path = pathToNamespace(path)
-	return filepath.Join(path, "persist.json")
+	return filepath.Join(d.basePath, path, "persist.json")
 }
 
 func (d *Database) persistPath(path string) string {
-	return filepath.Join(path, "persist.json")
+	return filepath.Join(d.basePath, path, "persist.json")
 }
