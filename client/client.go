@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"github.com/KVRes/Piccadilly/KV"
+	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/types"
 
 	"github.com/KVRes/Piccadilly/pb"
@@ -99,7 +100,7 @@ func (c *Client) Del(key string) error {
 	return err
 }
 
-func (c *Client) Connect(path string, strategy KV.ConnectStrategy, concu KV.ConcurrentModel) error {
+func (c *Client) Connect(path string, strategy KV.ConnectStrategy, concu Tablet.ConcurrentModel) error {
 	resp, err := c.mgr.Connect(context.Background(), &pb.ConnectRequest{Namespace: path, Strategy: pb.ConnectionStrategy(int32(strategy)), Model: pb.ConcurrentModel(int32(concu))})
 	if err == nil {
 		c.path = resp.GetNamespace()

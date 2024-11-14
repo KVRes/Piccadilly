@@ -18,6 +18,7 @@ type BucketConfig struct {
 	WBuffer       int
 	WKeySet       int
 	NoFlush       bool
+	WModel        ConcurrentModel
 }
 
 func (b *BucketConfig) Normalise() {

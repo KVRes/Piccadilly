@@ -12,6 +12,7 @@ A ZooKeeper-like service, but aims to provide single instance service with High 
 PKV supports 2 write models:
 
 - Linear (Single Thread)
+- NoLinear (Multi Thread, the Store must support write concurrency control)
 - Buffer (Multi Thread, but single thread per key)
 
 ### Benchmark (w/o RPC/WAL/GC)

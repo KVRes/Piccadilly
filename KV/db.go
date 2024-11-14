@@ -33,7 +33,7 @@ func NewDatabase(basePath string) *Database {
 	}
 }
 
-func (d *Database) Connect(path string, c ConnectStrategy, concu ConcurrentModel) (*PNode, string, error) {
+func (d *Database) Connect(path string, c ConnectStrategy, concu Tablet.ConcurrentModel) (*PNode, string, error) {
 	path = pathToNamespace(path)
 	pnode := d.nsGet(path)
 	var err error
@@ -53,7 +53,7 @@ func (d *Database) Connect(path string, c ConnectStrategy, concu ConcurrentModel
 		return pnode, path, nil
 	}
 	wKeySet := d.Template.KeySize
-	if concu == Linear {
+	if concu == Tablet.Linear {
 		wKeySet = 1
 	}
 	err = pnode.Bkt.StartService(Tablet.BucketConfig{
@@ -63,6 +63,7 @@ func (d *Database) Connect(path string, c ConnectStrategy, concu ConcurrentModel
 		WBuffer:       d.Template.WBuffer,
 		WKeySet:       wKeySet,
 		NoFlush:       d.Template.NoFlush,
+		WModel:        concu,
 	})
 	if err == nil {
 		pnode.Started = true

@@ -1,14 +1,26 @@
 package Tablet
 
 import (
+	"fmt"
 	"github.com/KVRes/Piccadilly/types"
 )
 
+type ConcurrentModel int
+
+const (
+	Linear ConcurrentModel = iota
+	Buffer
+	NoLinear
+)
+
 func (b *Bucket) writeChannel() {
-	if b.cfg.WKeySet == 1 {
+	switch b.cfg.WModel {
+	case Linear:
 		b.singleChannel()
-	} else {
+	case Buffer:
 		b.bufferChannel()
+	case NoLinear:
+		b.concurrentChannel()
 	}
 }
 
@@ -33,6 +45,7 @@ func (b *Bucket) singleChannel() {
 
 func (b *Bucket) bufferChannel() {
 	keyBuf := newKeyBuf(b.cfg.WKeySet)
+	fmt.Println(len(keyBuf.keys))
 	for {
 		kv := <-b.wChannel
 		empty := keyBuf.findEmpty(kv.Key)
@@ -41,10 +54,21 @@ func (b *Bucket) bufferChannel() {
 			go b.appendToWChannel(kv)
 			continue
 		}
+		keyBuf.keys[empty] = kv.Key
 		go func(kvp internalReq, idx int) {
 			b._doWrite(kvp)
 			keyBuf.keys[idx] = ""
 			b.Watcher.EmitEvent(kv.Key, kv.t)
 		}(kv, empty)
+	}
+}
+
+func (b *Bucket) concurrentChannel() {
+	for {
+		kv := <-b.wChannel
+		go func(kvp internalReq) {
+			b._doWrite(kvp)
+			b.Watcher.EmitEvent(kv.Key, kv.t)
+		}(kv)
 	}
 }

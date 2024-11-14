@@ -2,6 +2,7 @@ package tests
 
 import (
 	"github.com/KVRes/Piccadilly/KV"
+	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/client"
 	"github.com/KVRes/Piccadilly/serv"
 	"testing"
@@ -18,7 +19,7 @@ func TestServ(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = cli.Connect("/kevin/zonda", KV.CreateIfNotExist, KV.Buffer)
+	err = cli.Connect("/kevin/zonda", KV.CreateIfNotExist, Tablet.NoLinear)
 	if err != nil {
 		t.Fatal(err)
 	}

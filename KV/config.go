@@ -1,6 +1,7 @@
 package KV
 
 import (
+	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/KV/WAL"
 	"github.com/KVRes/Piccadilly/KV/store"
 	"time"
@@ -13,6 +14,7 @@ type DatabaseTemplate struct {
 	NoFlush       bool
 	WALType       WAL.Type
 	StoreType     store.Type
+	WModel        Tablet.ConcurrentModel
 }
 
 func DefaultDatabaseTemplate() DatabaseTemplate {
@@ -23,5 +25,6 @@ func DefaultDatabaseTemplate() DatabaseTemplate {
 		NoFlush:       false,
 		WALType:       WAL.JsonWAL,
 		StoreType:     store.SwissTable,
+		WModel:        Tablet.NoLinear,
 	}
 }
