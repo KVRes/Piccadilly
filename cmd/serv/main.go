@@ -22,14 +22,15 @@ type Config struct {
 type DBConfig struct {
 	WBuffer       *int                   `json:"w_buffer"`
 	FlushInterval *time.Duration         `json:"flush_interval"`
+	LongInterval  *time.Duration         `json:"long_interval"`
 	NoFlush       *bool                  `json:"no_flush"`
 	WALType       *WAL.Type              `json:"wal_type"`
 	StoreType     *store.Type            `json:"store_type"`
 	WModel        *types.ConcurrentModel `json:"w_model"`
 }
 
-func applyCfg(db *KV.Database, cfg *DBConfig) {
-	if cfg == nil {
+func (cfg *DBConfig) applyCfg(db *KV.Database) {
+	if cfg == nil || db == nil {
 		return
 	}
 
@@ -38,6 +39,9 @@ func applyCfg(db *KV.Database, cfg *DBConfig) {
 	}
 	if cfg.FlushInterval != nil {
 		db.Template.FlushInterval = *cfg.FlushInterval
+	}
+	if cfg.LongInterval != nil {
+		db.Template.LongInterval = *cfg.LongInterval
 	}
 	if cfg.NoFlush != nil {
 		db.Template.NoFlush = *cfg.NoFlush
@@ -73,7 +77,9 @@ func main() {
 	panicx.NotNilErr(json.Unmarshal(bs, &cfg))
 
 	sv := serv.NewServer(cfg.DBPath)
-	applyCfg(sv.Db, cfg.Config)
+	if cfg.Config != nil {
+		cfg.Config.applyCfg(sv.Db)
+	}
 
 	fmt.Println("Starting listening at", cfg.ListenAt)
 

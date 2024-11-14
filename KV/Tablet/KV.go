@@ -15,6 +15,7 @@ type BucketConfig struct {
 	WALPath       string
 	PersistPath   string
 	FlushInterval time.Duration
+	LongInterval  time.Duration
 	WBuffer       int
 	NoFlush       bool
 	WModel        types.ConcurrentModel
@@ -23,10 +24,6 @@ type BucketConfig struct {
 func (b *BucketConfig) Normalise() {
 	if b.WBuffer <= 0 {
 		b.WBuffer = 128
-	}
-
-	if b.FlushInterval <= 0 {
-		b.FlushInterval = 60 * time.Second
 	}
 }
 
@@ -106,7 +103,8 @@ func (b *Bucket) StartService(cfg BucketConfig) error {
 	}
 
 	// Give daemon a lock!
-	go b.daemon()
+	go b.flushThread()
+	go b.longDaemonThread()
 	go b.writeChannel()
 	b.wChannel = make(chan internalReq, cfg.WBuffer)
 	return nil
@@ -116,24 +114,30 @@ func (b *Bucket) appendToWChannel(req internalReq) {
 	b.wChannel <- req
 }
 
-func (b *Bucket) daemon() {
+func (b *Bucket) longDaemonThread() {
+	if b.cfg.LongInterval <= 0 {
+		return
+	}
+	for {
+		time.Sleep(b.cfg.LongInterval)
+		b.Watcher.GC()
+		b.wal.Truncate()
+	}
+}
+
+func (b *Bucket) flushThread() {
+	if !b.cfg.NoFlush || b.cfg.FlushInterval <= 0 {
+		return
+	}
 	for {
 		time.Sleep(b.cfg.FlushInterval)
-		if !b.cfg.NoFlush {
-			err := b.Flush()
-			if err != nil {
-				log.Println("Flush failed:", err)
-				continue
-			}
-		}
 
-		b.wal.Truncate()
-		/*if bytes, err := b.wal.Serialize(); err != nil {
-			log.Println("Serialize commitlog failed:", err)
+		err := b.Flush()
+		if err != nil {
+			log.Println("Flush failed:", err)
 			continue
-		} else {
-			os.WriteFile(b.cfg.WALPath, bytes, 0644)
-		}*/
+
+		}
 	}
 }
 

@@ -57,6 +57,7 @@ func (d *Database) Connect(path string, c types.ConnectStrategy, concu types.Con
 		WALPath:       d.walPath(path),
 		PersistPath:   d.persistPath(path),
 		FlushInterval: d.Template.FlushInterval,
+		LongInterval:  d.Template.LongInterval,
 		WBuffer:       d.Template.WBuffer,
 		NoFlush:       d.Template.NoFlush,
 		WModel:        concu,

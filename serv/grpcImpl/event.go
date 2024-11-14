@@ -39,7 +39,10 @@ type GRPCSubscriber struct {
 }
 
 func (s *GRPCSubscriber) Notify(key string, eventType types.EventType) {
-	s.stream.Send(&pb.Event{EventVal: key, EventType: int32(eventType)})
+	err := s.stream.Send(&pb.Event{EventVal: key, EventType: int32(eventType)})
+	if err != nil {
+		s.off <- struct{}{}
+	}
 }
 
 func (s *GRPCSubscriber) Close() error {

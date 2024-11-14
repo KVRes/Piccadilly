@@ -33,8 +33,8 @@ func (j *JsonWALProvider) Append(record Record) (uint64, error) {
 		return 0, err
 	}
 	// new line
-	ls := string(line) + "\n"
-	_, err = j.file.WriteString(ls)
+	line = append(line, '\n')
+	_, err = j.file.Write(line)
 	if err != nil {
 		return 0, err
 	}
@@ -42,22 +42,30 @@ func (j *JsonWALProvider) Append(record Record) (uint64, error) {
 }
 
 func (j *JsonWALProvider) RecordsSinceLastChkptr() ([]Record, error) {
-	checkpointPos, err := j.GetLastChkptr()
-	if err != nil {
-		return nil, err
-	}
+	checkpointPos, _ := j.GetLastChkptr()
 	return j.content[checkpointPos:], nil
 }
 
 func (j *JsonWALProvider) Truncate() error {
 	j.l.Lock()
 	defer j.l.Unlock()
-	checkpointPos, err := j.GetLastChkptr()
+	checkpointPos, _ := j.GetLastChkptr()
+	j.content = j.content[checkpointPos:]
+	// rewrite file
+	err := j.file.Truncate(0)
 	if err != nil {
 		return err
 	}
-	j.content = j.content[checkpointPos:]
-	return nil
+	_, err = j.file.Seek(0, 0)
+	if err != nil {
+		return err
+	}
+	bs, err := j._serialize()
+	if err != nil {
+		return err
+	}
+	_, err = j.file.Write(bs)
+	return err
 }
 
 func (j *JsonWALProvider) Load(data []byte) error {
@@ -87,6 +95,7 @@ func (j *JsonWALProvider) Close() error {
 	return j.file.Close()
 }
 
+// GetLastChkptr impossible error
 func (j *JsonWALProvider) GetLastChkptr() (uint64, error) {
 	if len(j.content) == 0 {
 		return 0, nil
@@ -106,8 +115,22 @@ func (j *JsonWALProvider) GetLastChkptr() (uint64, error) {
 	return 0, nil
 }
 
+func (j *JsonWALProvider) _serialize() ([]byte, error) {
+	sb := strings.Builder{}
+	for _, record := range j.content {
+		line, err := json.Marshal(record)
+		if err != nil {
+			return nil, err
+		}
+		sb.Write(line)
+		sb.WriteByte('\n')
+	}
+
+	return []byte(sb.String()), nil
+}
+
 func (j *JsonWALProvider) Serialize() ([]byte, error) {
-	return json.Marshal(j.content)
+	return j._serialize()
 }
 
 var _ Provider = &JsonWALProvider{}
