@@ -101,7 +101,11 @@ func (c *Client) Del(key string) error {
 }
 
 func (c *Client) Connect(path string, strategy KV.ConnectStrategy, concu Tablet.ConcurrentModel) error {
-	resp, err := c.mgr.Connect(context.Background(), &pb.ConnectRequest{Namespace: path, Strategy: pb.ConnectionStrategy(int32(strategy)), Model: pb.ConcurrentModel(int32(concu))})
+	resp, err := c.mgr.Connect(context.Background(),
+		&pb.ConnectRequest{
+			Namespace: path,
+			Strategy:  pb.ConnectionStrategy(int32(strategy)),
+			Model:     pb.ConcurrentModel(Tablet.ConcurrentModelToI32(concu))})
 	if err == nil {
 		c.path = resp.GetNamespace()
 	}

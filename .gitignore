@@ -13,3 +13,4 @@ desktop.ini
 *.pid
 
 *.lock
+out/

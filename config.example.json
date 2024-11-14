@@ -1,0 +1,12 @@
+{
+  "listen_at": "127.0.0.1:8080",
+  "db_path": "./data",
+  "config": {
+    "w_buffer": 128,
+    "flush_interval": 60000000000,
+    "no_flush": false,
+    "wal_type": "json",
+    "store_type": "swissTable",
+    "w_model": "nolinear"
+  }
+}

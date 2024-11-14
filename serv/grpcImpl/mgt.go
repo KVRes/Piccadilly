@@ -16,7 +16,7 @@ func (m ManagerService) Connect(ctx context.Context, request *pb.ConnectRequest)
 	_, ns, err := m.Db.Connect(
 		request.GetNamespace(),
 		KV.ConnectStrategy(request.GetStrategy()),
-		Tablet.ConcurrentModel(request.GetModel()))
+		Tablet.ConcurrentModelI32Cov(int32(request.GetModel())))
 	if err != nil {
 		return nil, err
 	}
