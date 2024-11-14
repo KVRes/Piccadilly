@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/KVRes/Piccadilly/KV"
-	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/KV/WAL"
 	"github.com/KVRes/Piccadilly/KV/store"
 	"github.com/KVRes/Piccadilly/serv"
+	"github.com/KVRes/Piccadilly/types"
 	"github.com/KevinZonda/GoX/pkg/iox"
 	"github.com/KevinZonda/GoX/pkg/panicx"
 	"time"
@@ -20,12 +20,12 @@ type Config struct {
 }
 
 type DBConfig struct {
-	WBuffer       *int                    `json:"w_buffer"`
-	FlushInterval *time.Duration          `json:"flush_interval"`
-	NoFlush       *bool                   `json:"no_flush"`
-	WALType       *WAL.Type               `json:"wal_type"`
-	StoreType     *store.Type             `json:"store_type"`
-	WModel        *Tablet.ConcurrentModel `json:"w_model"`
+	WBuffer       *int                   `json:"w_buffer"`
+	FlushInterval *time.Duration         `json:"flush_interval"`
+	NoFlush       *bool                  `json:"no_flush"`
+	WALType       *WAL.Type              `json:"wal_type"`
+	StoreType     *store.Type            `json:"store_type"`
+	WModel        *types.ConcurrentModel `json:"w_model"`
 }
 
 func applyCfg(db *KV.Database, cfg *DBConfig) {

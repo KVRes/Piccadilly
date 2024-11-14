@@ -4,6 +4,7 @@ import (
 	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/KV/WAL"
 	"github.com/KVRes/Piccadilly/KV/store"
+	"github.com/KVRes/Piccadilly/types"
 	"github.com/KVRes/Piccadilly/utils"
 	"os"
 	"sync"
@@ -33,7 +34,7 @@ func NewDatabase(basePath string) *Database {
 	}
 }
 
-func (d *Database) Connect(path string, c ConnectStrategy, concu Tablet.ConcurrentModel) (*PNode, string, error) {
+func (d *Database) Connect(path string, c types.ConnectStrategy, concu types.ConcurrentModel) (*PNode, string, error) {
 	path = pathToNamespace(path)
 	pnode := d.nsGet(path)
 	var err error
@@ -84,7 +85,7 @@ func (d *Database) MustGetStartedPnode(path string) (*PNode, error) {
 	return pnode, nil
 }
 
-func (d *Database) loadNamespace(path string, c ConnectStrategy) (*PNode, error) {
+func (d *Database) loadNamespace(path string, c types.ConnectStrategy) (*PNode, error) {
 	d.nsLck.Lock()
 	defer d.nsLck.Unlock()
 	pnode := d.Namespace[path]
@@ -96,7 +97,7 @@ func (d *Database) loadNamespace(path string, c ConnectStrategy) (*PNode, error)
 		return pnode, nil
 	}
 	if !utils.IsExist(d.namespacePath(path)) {
-		if c != CreateIfNotExist {
+		if c != types.CreateIfNotExist {
 			return nil, os.ErrNotExist
 		}
 		_ = os.MkdirAll(d.namespacePath(path), 0755)

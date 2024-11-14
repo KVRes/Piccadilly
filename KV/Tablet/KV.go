@@ -17,7 +17,7 @@ type BucketConfig struct {
 	FlushInterval time.Duration
 	WBuffer       int
 	NoFlush       bool
-	WModel        ConcurrentModel
+	WModel        types.ConcurrentModel
 }
 
 func (b *BucketConfig) Normalise() {

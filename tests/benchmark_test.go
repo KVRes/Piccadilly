@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/KVRes/Piccadilly/KV/WAL"
 	"github.com/KVRes/Piccadilly/KV/store"
+	"github.com/KVRes/Piccadilly/types"
 	"testing"
 	"time"
 
@@ -19,7 +20,7 @@ func TestDBBenchMark(t *testing.T) {
 		WALPath:     "WAL.json",
 		PersistPath: "empty.json",
 		NoFlush:     true,
-		WModel:      Tablet.NoLinear,
+		WModel:      types.NoLinear,
 	})
 	N := 100_0000
 	m := datasetN(N)

@@ -1,8 +1,6 @@
 package tests
 
 import (
-	"github.com/KVRes/Piccadilly/KV"
-	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/client"
 	"github.com/KVRes/Piccadilly/serv"
 	"github.com/KVRes/Piccadilly/types"
@@ -18,7 +16,7 @@ func TestWatcher(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 	cli, _ := client.NewClient("127.0.0.1:12306")
-	cli.Connect("/kevin/zonda", KV.CreateIfNotExist, Tablet.NoLinear)
+	cli.Connect("/kevin/zonda", types.CreateIfNotExist, types.NoLinear)
 
 	sub, err := cli.Watch("lock", types.EventAll)
 	if err != nil {
