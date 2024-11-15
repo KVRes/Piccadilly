@@ -38,9 +38,18 @@ message GetRequest {
     string key = 2;
 }
 
+message KeysRequest {
+    string namespace = 1;
+}
+
 message CRUDResponse {
     bool ok = 1;
     string val = 2;
+}
+
+message KeysResponse {
+    bool ok = 1;
+    repeated string keys = 2;
 }
 
 // 事件存储服务
@@ -48,6 +57,7 @@ service CRUDService {
     rpc Set(SetRequest) returns (CRUDResponse) {}
     rpc Get(GetRequest) returns (CRUDResponse) {}
     rpc Del(DelRequest) returns (CRUDResponse) {}
+    rpc Keys(KeysRequest) returns (KeysResponse) {}
 }
 
 enum ConnectionStrategy {

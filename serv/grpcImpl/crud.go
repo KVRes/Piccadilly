@@ -14,6 +14,15 @@ type CRUDService struct {
 	Debug bool
 }
 
+func (c *CRUDService) Keys(ctx context.Context, request *pb.KeysRequest) (*pb.KeysResponse, error) {
+	bkt, err := c.getBkt(request)
+	if err != nil {
+		return nil, err
+	}
+	keys, err := bkt.Keys()
+	return &pb.KeysResponse{Ok: err == nil, Keys: keys}, err
+}
+
 func (c *CRUDService) getBkt(namespace INamespaceGetter) (*Tablet.Bucket, error) {
 	if c.Debug {
 		return notNilBkt(c.B)

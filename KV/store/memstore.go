@@ -49,4 +49,14 @@ func (m *MemStore) Load(data []byte) error {
 	return json.Unmarshal(data, &m.m)
 }
 
+func (m *MemStore) Keys() ([]string, error) {
+	var keys []string
+	m.l.RLock()
+	defer m.l.RUnlock()
+	for k := range m.m {
+		keys = append(keys, k)
+	}
+	return keys, nil
+}
+
 var _ Provider = &MemStore{}

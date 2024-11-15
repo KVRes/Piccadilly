@@ -106,6 +106,16 @@ func (c *Client) Del(key string) error {
 	return err
 }
 
+func (c *Client) Keys() ([]string, error) {
+	resp, err := c.crud.Keys(context.Background(), &pb.KeysRequest{
+		Namespace: c.path,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp.GetKeys(), nil
+}
+
 func (c *Client) Connect(path string, strategy types.ConnectStrategy, concu types.ConcurrentModel) error {
 	resp, err := c.mgr.Connect(context.Background(),
 		&pb.ConnectRequest{

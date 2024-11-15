@@ -39,6 +39,15 @@ func (st *SwissTableStore) Del(key string) error {
 	return nil
 }
 
+func (st *SwissTableStore) Keys() ([]string, error) {
+	var keys []string
+	st.CsMap.Range(func(key string, value string) bool {
+		keys = append(keys, key)
+		return false
+	})
+	return keys, nil
+}
+
 func (st *SwissTableStore) SerializeAll() ([]byte, error) {
 	return st.CsMap.MarshalJSON()
 }

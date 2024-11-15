@@ -130,9 +130,10 @@ var EventService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	CRUDService_Set_FullMethodName = "/EventService.CRUDService/Set"
-	CRUDService_Get_FullMethodName = "/EventService.CRUDService/Get"
-	CRUDService_Del_FullMethodName = "/EventService.CRUDService/Del"
+	CRUDService_Set_FullMethodName  = "/EventService.CRUDService/Set"
+	CRUDService_Get_FullMethodName  = "/EventService.CRUDService/Get"
+	CRUDService_Del_FullMethodName  = "/EventService.CRUDService/Del"
+	CRUDService_Keys_FullMethodName = "/EventService.CRUDService/Keys"
 )
 
 // CRUDServiceClient is the client API for CRUDService service.
@@ -144,6 +145,7 @@ type CRUDServiceClient interface {
 	Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*CRUDResponse, error)
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*CRUDResponse, error)
 	Del(ctx context.Context, in *DelRequest, opts ...grpc.CallOption) (*CRUDResponse, error)
+	Keys(ctx context.Context, in *KeysRequest, opts ...grpc.CallOption) (*KeysResponse, error)
 }
 
 type cRUDServiceClient struct {
@@ -184,6 +186,16 @@ func (c *cRUDServiceClient) Del(ctx context.Context, in *DelRequest, opts ...grp
 	return out, nil
 }
 
+func (c *cRUDServiceClient) Keys(ctx context.Context, in *KeysRequest, opts ...grpc.CallOption) (*KeysResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(KeysResponse)
+	err := c.cc.Invoke(ctx, CRUDService_Keys_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CRUDServiceServer is the server API for CRUDService service.
 // All implementations must embed UnimplementedCRUDServiceServer
 // for forward compatibility.
@@ -193,6 +205,7 @@ type CRUDServiceServer interface {
 	Set(context.Context, *SetRequest) (*CRUDResponse, error)
 	Get(context.Context, *GetRequest) (*CRUDResponse, error)
 	Del(context.Context, *DelRequest) (*CRUDResponse, error)
+	Keys(context.Context, *KeysRequest) (*KeysResponse, error)
 	mustEmbedUnimplementedCRUDServiceServer()
 }
 
@@ -211,6 +224,9 @@ func (UnimplementedCRUDServiceServer) Get(context.Context, *GetRequest) (*CRUDRe
 }
 func (UnimplementedCRUDServiceServer) Del(context.Context, *DelRequest) (*CRUDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Del not implemented")
+}
+func (UnimplementedCRUDServiceServer) Keys(context.Context, *KeysRequest) (*KeysResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Keys not implemented")
 }
 func (UnimplementedCRUDServiceServer) mustEmbedUnimplementedCRUDServiceServer() {}
 func (UnimplementedCRUDServiceServer) testEmbeddedByValue()                     {}
@@ -287,6 +303,24 @@ func _CRUDService_Del_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CRUDService_Keys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(KeysRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CRUDServiceServer).Keys(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CRUDService_Keys_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CRUDServiceServer).Keys(ctx, req.(*KeysRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CRUDService_ServiceDesc is the grpc.ServiceDesc for CRUDService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -305,6 +339,10 @@ var CRUDService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Del",
 			Handler:    _CRUDService_Del_Handler,
+		},
+		{
+			MethodName: "Keys",
+			Handler:    _CRUDService_Keys_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -27,3 +27,7 @@ func (b *Bucket) Del(key string) error {
 func (b *Bucket) Get(key string) (string, error) {
 	return b.store.Get(key)
 }
+
+func (b *Bucket) Keys() ([]string, error) {
+	return b.store.Keys()
+}
