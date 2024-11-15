@@ -14,7 +14,7 @@ func (b *Bucket) writeChannel() {
 }
 
 func (b *Bucket) _doWrite(kvp internalReq) (string, bool) {
-	v, e := b.store.Get(kvp.Key)
+	v, e := b.store.Get(kvp.Key) // FIXME: This will cause ~3% perf degrade, but is required for event delta
 	exist := e == nil
 	switch kvp.t {
 	case types.EventSet:
