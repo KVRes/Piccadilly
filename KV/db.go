@@ -7,7 +7,6 @@ import (
 	"github.com/KVRes/Piccadilly/types"
 	"github.com/KVRes/Piccadilly/utils"
 	"os"
-	"sync"
 	"time"
 )
 
@@ -17,26 +16,23 @@ type PNode struct {
 	Started  bool
 }
 
-type Namespace map[string]*PNode
-
 type Database struct {
-	nsLck     sync.RWMutex
-	Namespace Namespace
-	basePath  string
-	Template  DatabaseTemplate
+	NS       *Namespace
+	basePath string
+	Template DatabaseTemplate
 }
 
 func NewDatabase(basePath string) *Database {
 	return &Database{
-		Namespace: make(Namespace),
-		basePath:  basePath,
-		Template:  DefaultDatabaseTemplate(),
+		NS:       &Namespace{ns: make(map[string]*PNode)},
+		basePath: basePath,
+		Template: DefaultDatabaseTemplate(),
 	}
 }
 
 func (d *Database) Connect(path string, c types.ConnectStrategy, concu types.ConcurrentModel) (*PNode, string, error) {
 	path = pathToNamespace(path)
-	pnode := d.nsGet(path)
+	pnode := d.NS.Get(path)
 	var err error
 	if pnode == nil || pnode.LoadTime == 0 {
 		pnode, err = d.loadNamespace(path, c)
@@ -48,8 +44,8 @@ func (d *Database) Connect(path string, c types.ConnectStrategy, concu types.Con
 		return pnode, path, nil
 	}
 
-	d.nsLck.Lock()
-	defer d.nsLck.Unlock()
+	d.NS.Lock()
+	defer d.NS.Unlock()
 	if pnode.Started {
 		return pnode, path, nil
 	}
@@ -68,15 +64,9 @@ func (d *Database) Connect(path string, c types.ConnectStrategy, concu types.Con
 	return pnode, path, nil
 }
 
-func (d *Database) nsGet(path string) *PNode {
-	d.nsLck.RLock()
-	defer d.nsLck.RUnlock()
-	return d.Namespace[path]
-}
-
-func (d *Database) MustGetStartedPnode(path string) (*PNode, error) {
+func (d *Database) MustGetStartedPNode(path string) (*PNode, error) {
 	path = pathToNamespace(path)
-	pnode := d.nsGet(path)
+	pnode := d.NS.Get(path)
 	if pnode == nil || pnode.LoadTime == 0 {
 		return nil, ErrNotLoaded
 	}
@@ -87,12 +77,12 @@ func (d *Database) MustGetStartedPnode(path string) (*PNode, error) {
 }
 
 func (d *Database) loadNamespace(path string, c types.ConnectStrategy) (*PNode, error) {
-	d.nsLck.Lock()
-	defer d.nsLck.Unlock()
-	pnode := d.Namespace[path]
+	d.NS.Lock()
+	defer d.NS.Unlock()
+	pnode := d.NS.GetUnsafe(path)
 	if pnode == nil {
 		pnode = &PNode{}
-		d.Namespace[path] = pnode
+		d.NS.SetUnsafe(path, pnode)
 	}
 	if pnode.LoadTime != 0 {
 		return pnode, nil

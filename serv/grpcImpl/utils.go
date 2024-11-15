@@ -15,7 +15,7 @@ type INamespaceGetter interface {
 
 func getBkt(db *KV.Database, namespace INamespaceGetter) (bkt *Tablet.Bucket, err error) {
 	path := namespace.GetNamespace()
-	pnode, err := db.MustGetStartedPnode(path)
+	pnode, err := db.MustGetStartedPNode(path)
 	if err != nil {
 		return nil, err
 	}
