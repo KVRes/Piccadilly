@@ -14,24 +14,21 @@ type EventService struct {
 	Debug   bool
 }
 
-func (s *EventService) defaultWatcher() *Watcher.KeyWatcher {
+func (s *EventService) getWatcher(namespace INamespaceGetter) (*Watcher.KeyWatcher, error) {
 	if s.Debug {
-		return s.Watcher
+		return notNilWatcher(s.Watcher)
 	}
-	return nil
+	bkt, err := getBkt(s.Db, namespace)
+	if err != nil {
+		return nil, err
+	}
+	return notNilWatcher(bkt.Watcher)
 }
 
 func (s *EventService) SubscribeEvents(req *pb.SubscribeRequest, stream pb.EventService_SubscribeEventsServer) error {
-	wat := s.defaultWatcher()
-	if req.GetNamespace() != "" {
-		pnode, err := s.Db.MustGetStartedPnode(req.GetNamespace())
-		if err != nil {
-			return err
-		}
-		wat = pnode.Bkt.Watcher
-	}
-	if wat == nil {
-		return ErrNilBucket
+	wat, err := s.getWatcher(req)
+	if err != nil {
+		return err
 	}
 
 	ch := make(chan struct{})
