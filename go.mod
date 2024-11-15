@@ -4,6 +4,8 @@ go 1.23.1
 
 require (
 	github.com/KevinZonda/GoX v0.0.18
+	github.com/chzyer/readline v1.5.1
+	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/mhmtszr/concurrent-swiss-map v1.0.8
 	google.golang.org/grpc v1.68.0
 	google.golang.org/protobuf v1.35.1

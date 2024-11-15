@@ -12,10 +12,12 @@ import (
 func TestGRPC(t *testing.T) {
 	db := initDB()
 	crud := &grpcImpl2.CRUDService{
-		B: db,
+		B:     db,
+		Debug: true,
 	}
 	event := &grpcImpl2.EventService{
 		Watcher: db.Watcher,
+		Debug:   true,
 	}
 
 	serv := grpc.NewServer()

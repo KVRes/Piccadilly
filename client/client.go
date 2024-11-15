@@ -30,6 +30,14 @@ func NewClient(addr string) (*Client, error) {
 	}, nil
 }
 
+func (c *Client) GetCurrentPath() string {
+	return "/" + c.path
+}
+
+func (c *Client) CleanPath() {
+	c.path = ""
+}
+
 func (c *Client) Close() error {
 	return c.conn.Close()
 }

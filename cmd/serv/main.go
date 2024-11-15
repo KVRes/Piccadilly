@@ -75,6 +75,9 @@ func main() {
 
 	var cfg Config
 	panicx.NotNilErr(json.Unmarshal(bs, &cfg))
+	if cfg.ListenAt == "" {
+		cfg.ListenAt = types.DEFAULT_ADDR
+	}
 
 	sv := serv.NewServer(cfg.DBPath)
 	if cfg.Config != nil {

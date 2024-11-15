@@ -11,16 +11,27 @@ type EventService struct {
 	pb.UnimplementedEventServiceServer
 	Watcher *Watcher.KeyWatcher
 	Db      *KV.Database
+	Debug   bool
+}
+
+func (s *EventService) defaultWatcher() *Watcher.KeyWatcher {
+	if s.Debug {
+		return s.Watcher
+	}
+	return nil
 }
 
 func (s *EventService) SubscribeEvents(req *pb.SubscribeRequest, stream pb.EventService_SubscribeEventsServer) error {
-	wat := s.Watcher
+	wat := s.defaultWatcher()
 	if req.GetNamespace() != "" {
 		pnode, err := s.Db.MustGetStartedPnode(req.GetNamespace())
 		if err != nil {
 			return err
 		}
 		wat = pnode.Bkt.Watcher
+	}
+	if wat == nil {
+		return ErrNilBucket
 	}
 
 	ch := make(chan struct{})
