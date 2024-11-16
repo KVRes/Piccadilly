@@ -1,6 +1,7 @@
 package KV
 
 import (
+	"errors"
 	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/KV/WAL"
 	"github.com/KVRes/Piccadilly/KV/store"
@@ -28,6 +29,30 @@ func NewDatabase(basePath string) *Database {
 		basePath: basePath,
 		Template: DefaultDatabaseTemplate(),
 	}
+}
+
+func (d *Database) ListPNodes(path string) []string {
+	path = d.NamespacePath(path)
+	dirs, err := os.ReadDir(path)
+	if err != nil {
+		return nil
+	}
+	var dbs []string
+	for _, dir := range dirs {
+		if dir.IsDir() {
+			dbs = append(dbs, dir.Name())
+		}
+	}
+	return dbs
+}
+
+func (d *Database) CreatePNode(path string) error {
+	path = d.NamespacePath(path)
+	err := os.MkdirAll(path, 0755)
+	if errors.Is(err, os.ErrExist) {
+		return nil
+	}
+	return err
 }
 
 func (d *Database) Connect(path string, c types.ConnectStrategy, concu types.ConcurrentModel) (*PNode, string, error) {

@@ -12,6 +12,16 @@ type ManagerService struct {
 	Db *KV.Database
 }
 
+func (m ManagerService) List(ctx context.Context, request *pb.ListRequest) (*pb.ListResponse, error) {
+	pnodes := m.Db.ListPNodes(request.GetNamespace())
+	return &pb.ListResponse{Ok: true, Pnodes: pnodes}, nil
+}
+
+func (m ManagerService) Create(ctx context.Context, request *pb.CreateRequest) (*pb.CreateResponse, error) {
+	err := m.Db.CreatePNode(request.GetNamespace())
+	return &pb.CreateResponse{Ok: err == nil}, err
+}
+
 func (m ManagerService) Connect(ctx context.Context, request *pb.ConnectRequest) (*pb.ConnectResponse, error) {
 	_, ns, err := m.Db.Connect(
 		request.GetNamespace(),

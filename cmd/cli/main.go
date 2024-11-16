@@ -64,9 +64,14 @@ func OnConnected() {
 			cmdErr = onCommand(elems, 2, delCmd)
 		case "keys":
 			cmdErr = onCommand(elems, -1, keysCmd)
-
+		case "ls":
+			cmdErr = onCommand(elems, -1, lsCmd)
+		case "create":
+			cmdErr = onCommand(elems, 2, createCmd)
 		case "exit":
 			return
+		default:
+			cmdErr = fmt.Errorf("unknown command: %s", elems[0])
 		}
 		if cmdErr != nil {
 			fmt.Println(cmdErr)

@@ -2,11 +2,12 @@ package client
 
 import (
 	"context"
-	"github.com/KVRes/Piccadilly/types"
-
 	"github.com/KVRes/Piccadilly/pb"
+	"github.com/KVRes/Piccadilly/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"path/filepath"
+	"strings"
 )
 
 type Client struct {
@@ -114,6 +115,26 @@ func (c *Client) Keys() ([]string, error) {
 		return nil, err
 	}
 	return resp.GetKeys(), nil
+}
+
+func (c *Client) ListPNodes() ([]string, error) {
+	resp, err := c.mgr.List(context.Background(), &pb.ListRequest{
+		Namespace: c.path,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp.GetPnodes(), nil
+}
+
+func (c *Client) CreatePNode(path string) error {
+	path = strings.TrimSpace(path)
+	path = strings.Trim(path, "/")
+	base := strings.Trim(strings.TrimSpace(c.path), "/")
+	_, err := c.mgr.Create(context.Background(), &pb.CreateRequest{
+		Namespace: filepath.Join(base, path),
+	})
+	return err
 }
 
 func (c *Client) Connect(path string, strategy types.ConnectStrategy, concu types.ConcurrentModel) error {

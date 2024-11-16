@@ -56,3 +56,20 @@ func keysCmd(elems []string) error {
 	}
 	return nil
 }
+
+func lsCmd(elems []string) error {
+	ns, err := cli.ListPNodes()
+	if err != nil {
+		return err
+	}
+	for _, n := range ns {
+		fmt.Println(n)
+	}
+	return nil
+}
+
+func createCmd(elems []string) error {
+	ns := elems[1]
+	err := cli.CreatePNode(ns)
+	return err
+}

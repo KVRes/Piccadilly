@@ -83,6 +83,25 @@ message ConnectResponse {
     string namespace = 3;
 }
 
+message ListRequest {
+    string namespace = 1;
+}
+
+message ListResponse {
+    bool ok = 1;
+    repeated string pnodes = 2;
+}
+
+message CreateRequest {
+    string namespace = 1;
+}
+
+message CreateResponse {
+    bool ok = 1;
+}
+
 service ManagerService {
     rpc Connect(ConnectRequest) returns (ConnectResponse) {}
+    rpc List(ListRequest) returns (ListResponse) {}
+    rpc Create(CreateRequest) returns (CreateResponse)  {}
 }
