@@ -13,3 +13,5 @@ rm -fr ./SDK/go.mod
 cp -r ./go.mod ./SDK/go.mod
 cd SDK
 bash replace.sh
+
+g :y acp "sync"

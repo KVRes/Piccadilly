@@ -18,6 +18,10 @@ type Client struct {
 	path string
 }
 
+func (c *Client) GetConn() *grpc.ClientConn {
+	return c.conn
+}
+
 func (c *Client) Copy() *Client {
 	return &Client{
 		conn: c.conn,
@@ -52,8 +56,6 @@ func (c *Client) CleanPath() {
 func (c *Client) Close() error {
 	return c.conn.Close()
 }
-
-
 
 func (c *Client) Watch(key string, eventType types.EventType) (Subscribed, error) {
 	stream, err := c.ev.SubscribeEvents(context.Background(), &pb.SubscribeRequest{
