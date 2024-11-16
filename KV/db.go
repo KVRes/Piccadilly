@@ -2,7 +2,6 @@ package KV
 
 import (
 	"errors"
-	"fmt"
 	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/KV/WAL"
 	"github.com/KVRes/Piccadilly/KV/store"
@@ -70,12 +69,20 @@ func (d *Database) Connect(path string, c types.ConnectStrategy, concu types.Con
 		return pnode, path, nil
 	}
 
+	err = d.pullUpBkt(pnode, path, concu)
+	return pnode, path, err
+}
+
+func (d *Database) pullUpBkt(pnode *PNode, path string, concu types.ConcurrentModel) error {
 	d.NS.Lock()
 	defer d.NS.Unlock()
-	if pnode.Started {
-		return pnode, path, nil
+	if pnode == nil {
+		return nil
 	}
-	err = pnode.Bkt.StartService(Tablet.BucketConfig{
+	if pnode.Started {
+		return nil
+	}
+	err := pnode.Bkt.StartService(Tablet.BucketConfig{
 		WALPath:       d.walPath(path),
 		PersistPath:   d.persistPath(path),
 		FlushInterval: d.Template.FlushInterval,
@@ -87,17 +94,24 @@ func (d *Database) Connect(path string, c types.ConnectStrategy, concu types.Con
 	if err == nil {
 		pnode.Started = true
 	}
-	return pnode, path, nil
+	return err
 }
 
 func (d *Database) MustGetStartedPNode(path string) (*PNode, error) {
 	path = pathToNamespace(path)
 	pnode := d.NS.Get(path)
+	var err error
 	if pnode == nil || pnode.LoadTime == 0 {
-		return d.loadNamespace(path, types.ErrorIfNotExist)
+		pnode, err = d.loadNamespace(path, types.ErrorIfNotExist)
+		if err != nil {
+			return nil, err
+		}
 	}
 	if !pnode.Started {
-		return nil, ErrNotStarted
+		err = d.pullUpBkt(pnode, path, types.NoLinear)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return pnode, nil
 }
@@ -130,8 +144,6 @@ func (d *Database) loadNamespace(path string, c types.ConnectStrategy) (*PNode, 
 		return pnode, err
 	}
 	pnode.Bkt = Tablet.NewBucket(str, wal)
-	fmt.Println("load namespace", path)
-	fmt.Println(pnode.Bkt.Keys())
 	pnode.LoadTime = time.Now().Unix()
 	return pnode, nil
 }
