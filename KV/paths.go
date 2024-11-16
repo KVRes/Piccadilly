@@ -6,6 +6,7 @@ import (
 )
 
 func pathToNamespace(path string) string {
+	path = strings.ToLower(path)
 	elms := strings.Split(path, "/")
 	var cleaned []string
 	for _, elm := range elms {
