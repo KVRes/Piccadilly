@@ -21,8 +21,8 @@ type Config struct {
 
 type DBConfig struct {
 	WBuffer       *int                   `json:"w_buffer"`
-	FlushInterval *time.Duration         `json:"flush_interval"`
-	LongInterval  *time.Duration         `json:"long_interval"`
+	FlushInterval *int                   `json:"flush_interval"`
+	LongInterval  *int                   `json:"long_interval"`
 	NoFlush       *bool                  `json:"no_flush"`
 	WALType       *WAL.Type              `json:"wal_type"`
 	StoreType     *store.Type            `json:"store_type"`
@@ -38,10 +38,10 @@ func (cfg *DBConfig) applyCfg(db *KV.Database) {
 		db.Template.WBuffer = *cfg.WBuffer
 	}
 	if cfg.FlushInterval != nil {
-		db.Template.FlushInterval = *cfg.FlushInterval
+		db.Template.FlushInterval = time.Second * time.Duration(*cfg.FlushInterval)
 	}
 	if cfg.LongInterval != nil {
-		db.Template.LongInterval = *cfg.LongInterval
+		db.Template.LongInterval = time.Second * time.Duration(*cfg.LongInterval)
 	}
 	if cfg.NoFlush != nil {
 		db.Template.NoFlush = *cfg.NoFlush

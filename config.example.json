@@ -3,7 +3,8 @@
   "db_path": "./data",
   "config": {
     "w_buffer": 128,
-    "flush_interval": 60000000000,
+    "flush_interval": 60,
+    "long_interval": 300,
     "no_flush": false,
     "wal_type": "json",
     "store_type": "swissTable",
