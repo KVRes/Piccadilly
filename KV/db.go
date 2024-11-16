@@ -93,7 +93,7 @@ func (d *Database) MustGetStartedPNode(path string) (*PNode, error) {
 	path = pathToNamespace(path)
 	pnode := d.NS.Get(path)
 	if pnode == nil || pnode.LoadTime == 0 {
-		return nil, ErrNotLoaded
+		return d.loadNamespace(path, types.ErrorIfNotExist)
 	}
 	if !pnode.Started {
 		return nil, ErrNotStarted
