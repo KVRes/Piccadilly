@@ -2,6 +2,7 @@ package Tablet
 
 import (
 	"github.com/KVRes/Piccadilly/types"
+	"log"
 )
 
 func (b *Bucket) writeChannel() {
@@ -10,6 +11,9 @@ func (b *Bucket) writeChannel() {
 		b.singleChannel()
 	case types.NoLinear:
 		b.concurrentChannel()
+	default:
+		log.Print("unknown write model, use Linear as default")
+		b.singleChannel()
 	}
 }
 
