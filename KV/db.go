@@ -130,7 +130,8 @@ func (d *Database) loadNamespace(path string, c types.ConnectStrategy) (*PNode, 
 		return pnode, err
 	}
 	pnode.Bkt = Tablet.NewBucket(str, wal)
-	fmt.Println("load namespace", path, pnode.Bkt)
+	fmt.Println("load namespace", path)
+	fmt.Println(pnode.Bkt.Keys())
 	pnode.LoadTime = time.Now().Unix()
 	return pnode, nil
 }
