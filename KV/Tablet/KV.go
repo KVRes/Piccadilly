@@ -6,6 +6,7 @@ import (
 	"github.com/KVRes/Piccadilly/KV/store"
 	"github.com/KVRes/Piccadilly/types"
 	"github.com/KVRes/Piccadilly/utils"
+	"github.com/KevinZonda/GoX/pkg/iox"
 	"log"
 	"os"
 	"time"
@@ -102,11 +103,11 @@ func (b *Bucket) StartService(cfg BucketConfig) error {
 		return err
 	}
 
+	b.wChannel = make(chan internalReq, cfg.WBuffer)
 	// Give daemon a lock!
 	go b.flushThread()
 	go b.longDaemonThread()
 	go b.writeChannel()
-	b.wChannel = make(chan internalReq, cfg.WBuffer)
 	return nil
 }
 
@@ -133,6 +134,7 @@ func (b *Bucket) flushThread() {
 		time.Sleep(b.cfg.FlushInterval)
 
 		err := b.Flush()
+		log.Printf("[Bkt %p] flushed, err: %v\n", b, err)
 		if err != nil {
 			log.Println("Flush failed:", err)
 			continue
@@ -151,7 +153,7 @@ func (b *Bucket) Flush() error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(b.cfg.PersistPath, bytes, 0644)
+	err = iox.WriteAllBytes(b.cfg.PersistPath, bytes)
 	if err != nil {
 		return err
 	}
