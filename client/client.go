@@ -18,6 +18,16 @@ type Client struct {
 	path string
 }
 
+func (c *Client) Copy() *Client {
+	return &Client{
+		conn: c.conn,
+		ev:   c.ev,
+		crud: c.crud,
+		mgr:  c.mgr,
+		path: c.path,
+	}
+}
+
 func NewClient(addr string) (*Client, error) {
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -43,10 +53,7 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-type Subscribed struct {
-	Ch          <-chan ErrorableEvent
-	Unsubscribe chan struct{}
-}
+
 
 func (c *Client) Watch(key string, eventType types.EventType) (Subscribed, error) {
 	stream, err := c.ev.SubscribeEvents(context.Background(), &pb.SubscribeRequest{
