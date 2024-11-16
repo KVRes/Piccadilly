@@ -17,13 +17,27 @@ func (b *Bucket) writeChannel() {
 	}
 }
 
-func (b *Bucket) _doWrite(kvp internalReq) (string, bool) {
+func (b *Bucket) _doWrite(kvp internalReq, counter bool) (string, bool) {
+	if counter {
+		// 858w RPS -> 846w RPS
+		b.wCount.Add(1)
+		defer b.wCount.Done()
+	}
+
 	v, e := b.store.Get(kvp.Key) // FIXME: This will cause ~3% perf degrade, but is required for event delta
 	exist := e == nil
 	switch kvp.t {
 	case types.EventSet:
+		if exist && v == kvp.Value {
+			kvp.done <- nil
+			return v, exist
+		}
 		kvp.done <- b.store.Set(kvp.Key, kvp.Value)
 	case types.EventDelete:
+		if !exist {
+			kvp.done <- nil
+			return v, exist
+		}
 		kvp.done <- b.store.Del(kvp.Key)
 	default:
 		kvp.done <- nil
@@ -34,7 +48,7 @@ func (b *Bucket) _doWrite(kvp internalReq) (string, bool) {
 func (b *Bucket) singleChannel() {
 	for {
 		kvp := <-b.wChannel
-		oldV, oldEx := b._doWrite(kvp)
+		oldV, oldEx := b._doWrite(kvp, false)
 		go b.doEvent(oldV, oldEx, kvp)
 	}
 }
@@ -60,7 +74,7 @@ func (b *Bucket) concurrentChannel() {
 	for {
 		kv := <-b.wChannel
 		go func(kvp internalReq) {
-			oldV, oldEx := b._doWrite(kvp)
+			oldV, oldEx := b._doWrite(kvp, true)
 			b.doEvent(oldV, oldEx, kvp)
 		}(kv)
 	}

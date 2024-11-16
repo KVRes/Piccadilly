@@ -9,6 +9,7 @@ import (
 	"github.com/KevinZonda/GoX/pkg/iox"
 	"log"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -52,6 +53,7 @@ type Bucket struct {
 	cfg      BucketConfig
 	wChannel chan internalReq
 	Watcher  *Watcher.KeyWatcher
+	wCount   sync.WaitGroup
 }
 
 func NewBucket(store store.Provider, wal WAL.Provider) *Bucket {
@@ -127,7 +129,7 @@ func (b *Bucket) longDaemonThread() {
 }
 
 func (b *Bucket) flushThread() {
-	if !b.cfg.NoFlush || b.cfg.FlushInterval <= 0 {
+	if b.cfg.NoFlush || b.cfg.FlushInterval <= 0 {
 		return
 	}
 	for {
@@ -148,6 +150,7 @@ func (b *Bucket) Flush() error {
 	if err != nil {
 		return err
 	}
+	b.waitWithTimeout(5 * time.Second)
 
 	bytes, err := b.store.SerializeAll()
 	if err != nil {
@@ -160,6 +163,18 @@ func (b *Bucket) Flush() error {
 
 	_, err = b.wal.Append(WAL.NewStateOperRecord(WAL.StateOperCheckpointOk))
 	return err
+}
+
+func (b *Bucket) waitWithTimeout(timeout time.Duration) {
+	ch := make(chan struct{})
+	go func() {
+		b.wCount.Wait()
+		close(ch)
+	}()
+	select {
+	case <-ch:
+	case <-time.After(timeout):
+	}
 }
 
 func (b *Bucket) RecoverFromRecords(recs []WAL.Record) error {
