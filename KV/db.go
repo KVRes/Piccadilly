@@ -2,6 +2,7 @@ package KV
 
 import (
 	"errors"
+	"fmt"
 	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/KV/WAL"
 	"github.com/KVRes/Piccadilly/KV/store"
@@ -129,6 +130,7 @@ func (d *Database) loadNamespace(path string, c types.ConnectStrategy) (*PNode, 
 		return pnode, err
 	}
 	pnode.Bkt = Tablet.NewBucket(str, wal)
+	fmt.Println("load namespace", path, pnode.Bkt)
 	pnode.LoadTime = time.Now().Unix()
 	return pnode, nil
 }
