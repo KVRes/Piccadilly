@@ -6,6 +6,7 @@ import (
 	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/pb"
 	"github.com/KVRes/Piccadilly/types"
+	"time"
 )
 
 type CRUDService struct {
@@ -40,9 +41,14 @@ func (c *CRUDService) Set(ctx context.Context, request *pb.SetRequest) (*pb.CRUD
 	if err != nil {
 		return nil, err
 	}
-	err = bkt.Set(request.GetKey(), types.Value{
+	val := types.Value{
 		Data: request.GetVal(),
-	})
+	}
+	if request.Ttl != nil {
+		exp := time.Now().Unix() + int64(request.GetTtl())
+		val.Expire = &exp
+	}
+	err = bkt.Set(request.GetKey(), val)
 	return &pb.CRUDResponse{Ok: err == nil}, err
 }
 

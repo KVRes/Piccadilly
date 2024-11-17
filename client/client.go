@@ -122,6 +122,13 @@ func (c *Client) Set(key, val string) error {
 	return err
 }
 
+func (c *Client) SetWithTTL(key, val string, ttl int32) error {
+	_, err := c.crud.Set(context.Background(), &pb.SetRequest{
+		Namespace: c.path,
+		Key:       key, Val: val, Ttl: &ttl})
+	return err
+}
+
 func (c *Client) Del(key string) error {
 	_, err := c.crud.Del(context.Background(), &pb.DelRequest{
 		Namespace: c.path, Key: key})

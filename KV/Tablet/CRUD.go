@@ -1,6 +1,7 @@
 package Tablet
 
 import (
+	"github.com/KVRes/Piccadilly/KV/Store"
 	"github.com/KVRes/Piccadilly/KV/WAL"
 	"github.com/KVRes/Piccadilly/types"
 )
@@ -27,7 +28,14 @@ func (b *Bucket) Del(key string) error {
 }
 
 func (b *Bucket) Get(key string) (types.Value, error) {
-	return b.store.Get(key)
+	val, err := b.store.Get(key)
+	if err != nil {
+		return types.Value{}, err
+	}
+	if val.IsExpired() {
+		return types.Value{}, Store.ErrKeyNotFound
+	}
+	return val, nil
 }
 
 func (b *Bucket) Keys() ([]string, error) {

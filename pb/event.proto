@@ -26,6 +26,7 @@ message SetRequest {
     string namespace = 1;
     string key = 2;
     string val = 3;
+    optional int32 ttl = 4;
 }
 
 message DelRequest {

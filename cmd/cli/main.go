@@ -53,6 +53,7 @@ func OnConnected() {
 		}
 		line = strings.TrimSpace(line)
 		elems := strings.Split(line, " ")
+		elems[0] = strings.ToLower(elems[0])
 		switch elems[0] {
 		case "cd":
 			cmdErr = onCommand(elems, 2, cdCmd)
@@ -60,6 +61,8 @@ func OnConnected() {
 			cmdErr = onCommand(elems, 2, getCmd)
 		case "set":
 			cmdErr = onCommand(elems, 3, setCmd)
+		case "setex":
+			cmdErr = onCommand(elems, 4, setexCmd)
 		case "del":
 			cmdErr = onCommand(elems, 2, delCmd)
 		case "keys":

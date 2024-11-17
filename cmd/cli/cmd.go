@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/KVRes/Piccadilly/types"
+	"strconv"
 )
 
 func cdCmd(elems []string) error {
@@ -30,6 +31,21 @@ func setCmd(elems []string) error {
 	key := elems[1]
 	val := elems[2]
 	err := cli.Set(key, val)
+	if err != nil {
+		return err
+	}
+	fmt.Println("OK")
+	return nil
+}
+
+func setexCmd(elems []string) error {
+	key := elems[1]
+	val := elems[2]
+	ttl, err := strconv.Atoi(elems[3])
+	if err != nil {
+		return err
+	}
+	err = cli.SetWithTTL(key, val, int32(ttl))
 	if err != nil {
 		return err
 	}
