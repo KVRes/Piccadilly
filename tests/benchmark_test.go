@@ -22,12 +22,12 @@ func TestDBBenchMark(t *testing.T) {
 		NoFlush:     true,
 		WModel:      types.NoLinear,
 	})
-	N := 100_0000
+	N := 500_0000
 	m := datasetN(N)
 
 	start := time.Now()
 	for k, v := range m {
-		_ = db.Set(k, v)
+		_ = db.Set(k, types.Value{Data: v})
 	}
 
 	elapsed := time.Since(start)

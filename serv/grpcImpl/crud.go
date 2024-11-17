@@ -5,6 +5,7 @@ import (
 	"github.com/KVRes/Piccadilly/KV"
 	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/pb"
+	"github.com/KVRes/Piccadilly/types"
 )
 
 type CRUDService struct {
@@ -39,7 +40,9 @@ func (c *CRUDService) Set(ctx context.Context, request *pb.SetRequest) (*pb.CRUD
 	if err != nil {
 		return nil, err
 	}
-	err = bkt.Set(request.GetKey(), request.GetVal())
+	err = bkt.Set(request.GetKey(), types.Value{
+		Data: request.GetVal(),
+	})
 	return &pb.CRUDResponse{Ok: err == nil}, err
 }
 
@@ -49,7 +52,10 @@ func (c *CRUDService) Get(ctx context.Context, request *pb.GetRequest) (*pb.CRUD
 		return nil, err
 	}
 	val, err := bkt.Get(request.GetKey())
-	return &pb.CRUDResponse{Ok: err == nil, Val: val}, err
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CRUDResponse{Ok: err == nil, Val: val.Data}, nil
 }
 
 func (c *CRUDService) Del(ctx context.Context, request *pb.DelRequest) (*pb.CRUDResponse, error) {

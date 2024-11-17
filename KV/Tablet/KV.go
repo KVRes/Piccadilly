@@ -29,17 +29,17 @@ func (b *BucketConfig) Normalise() {
 	}
 }
 
-func toReq(kvp types.KVPair, t types.EventType) internalReq {
+func toReq(kvp types.KVPairV, t types.EventType) internalReq {
 	return internalReq{
-		KVPair: kvp,
-		done:   make(chan error),
-		t:      t,
+		KVPairV: kvp,
+		done:    make(chan error),
+		t:       t,
 	}
 }
 
 type internalReq struct {
 	t types.EventType
-	types.KVPair
+	types.KVPairV
 	done chan error
 }
 

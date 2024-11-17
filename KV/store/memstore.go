@@ -2,32 +2,33 @@ package store
 
 import (
 	"encoding/json"
+	"github.com/KVRes/Piccadilly/types"
 	"sync"
 )
 
 type MemStore struct {
 	l sync.RWMutex
-	m map[string]string
+	m map[string]types.Value
 }
 
 func NewMemStore() *MemStore {
-	return &MemStore{m: make(map[string]string)}
+	return &MemStore{m: make(map[string]types.Value)}
 }
 
-func (m *MemStore) Set(key, value string) error {
+func (m *MemStore) Set(key string, value types.Value) error {
 	m.l.Lock()
 	defer m.l.Unlock()
 	m.m[key] = value
 	return nil
 }
 
-func (m *MemStore) Get(key string) (string, error) {
+func (m *MemStore) Get(key string) (types.Value, error) {
 	m.l.RLock()
 	defer m.l.RUnlock()
 	if value, ok := m.m[key]; ok {
 		return value, nil
 	}
-	return "", nil
+	return types.Value{}, nil
 }
 
 func (m *MemStore) Del(key string) error {

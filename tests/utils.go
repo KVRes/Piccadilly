@@ -45,7 +45,7 @@ func inDb(t *testing.T, bucket *Tablet.Bucket, m map[string]string) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if val != v {
+		if val.Data != v {
 			t.Fatal("expected", v, "got", val)
 		}
 	}

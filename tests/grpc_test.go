@@ -3,7 +3,7 @@ package tests
 import (
 	"github.com/KVRes/Piccadilly/client"
 	"github.com/KVRes/Piccadilly/pb"
-	grpcImpl2 "github.com/KVRes/Piccadilly/serv/grpcImpl"
+	"github.com/KVRes/Piccadilly/serv/grpcImpl"
 	"google.golang.org/grpc"
 	"log"
 	"testing"
@@ -11,11 +11,11 @@ import (
 
 func TestGRPC(t *testing.T) {
 	db := initDB()
-	crud := &grpcImpl2.CRUDService{
+	crud := &grpcImpl.CRUDService{
 		B:     db,
 		Debug: true,
 	}
-	event := &grpcImpl2.EventService{
+	event := &grpcImpl.EventService{
 		Watcher: db.Watcher,
 		Debug:   true,
 	}
@@ -26,7 +26,7 @@ func TestGRPC(t *testing.T) {
 	pb.RegisterCRUDServiceServer(serv, crud)
 	pb.RegisterEventServiceServer(serv, event)
 	go func() {
-		err := grpcImpl2.RunGRPC(serv, "127.0.0.1:12306")
+		err := grpcImpl.RunGRPC(serv, "127.0.0.1:12306")
 		if err != nil {
 			log.Fatalln(err)
 		}

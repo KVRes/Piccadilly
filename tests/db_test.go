@@ -4,6 +4,7 @@ import (
 	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/KV/WAL"
 	"github.com/KVRes/Piccadilly/KV/store"
+	"github.com/KVRes/Piccadilly/types"
 	"os"
 	"testing"
 )
@@ -13,7 +14,7 @@ func TestDB(t *testing.T) {
 
 	m := dataset()
 	for k, v := range m {
-		err := db.Set(k, v)
+		err := db.Set(k, types.Value{Data: v})
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -28,21 +28,21 @@ func (b *Bucket) _doWrite(kvp internalReq, counter bool) (string, bool) {
 	exist := e == nil
 	switch kvp.t {
 	case types.EventSet:
-		if exist && v == kvp.Value {
+		if exist && v.Data == kvp.Value.Data {
 			kvp.done <- nil
-			return v, exist
+			return v.Data, exist
 		}
 		kvp.done <- b.store.Set(kvp.Key, kvp.Value)
 	case types.EventDelete:
 		if !exist {
 			kvp.done <- nil
-			return v, exist
+			return "", exist
 		}
 		kvp.done <- b.store.Del(kvp.Key)
 	default:
 		kvp.done <- nil
 	}
-	return v, exist
+	return "", exist
 }
 
 func (b *Bucket) singleChannel() {
@@ -56,7 +56,7 @@ func (b *Bucket) singleChannel() {
 func (b *Bucket) doEvent(origV string, origExist bool, kvp internalReq) {
 	switch kvp.t {
 	case types.EventSet:
-		if origExist && origV == kvp.Value {
+		if origExist && origV == kvp.Value.Data {
 			return
 		}
 		b.Watcher.EmitEvent(kvp.Key, types.EventSet)

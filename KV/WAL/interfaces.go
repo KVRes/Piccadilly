@@ -1,6 +1,8 @@
 package WAL
 
-import "github.com/KVRes/Piccadilly/types"
+import (
+	"github.com/KVRes/Piccadilly/types"
+)
 
 type Provider interface {
 	Append(record Record) (uint64, error)
@@ -14,7 +16,7 @@ type Provider interface {
 type Record struct {
 	StateOper StateOperType
 	Key       string
-	Value     string
+	Value     types.Value
 }
 
 type StateOperType string
@@ -43,7 +45,7 @@ func NewStateOperFromEventTypes(event types.EventType) Record {
 	}
 }
 
-func (r Record) WithKeyValue(key, value string) Record {
+func (r Record) WithKeyValue(key string, value types.Value) Record {
 	r.Key = key
 	r.Value = value
 	return r
