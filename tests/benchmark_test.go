@@ -3,12 +3,10 @@ package tests
 import (
 	"fmt"
 	"github.com/KVRes/Piccadilly/KV/Store"
+	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/KV/WAL"
 	"github.com/KVRes/Piccadilly/types"
 	"testing"
-	"time"
-
-	"github.com/KVRes/Piccadilly/KV/Tablet"
 )
 
 func TestDBBenchMark(t *testing.T) {
@@ -23,23 +21,19 @@ func TestDBBenchMark(t *testing.T) {
 		WModel:      types.NoLinear,
 	})
 	N := 500_0000
-	m := datasetN(N)
+	b := &Benchmark{Data: datasetN(N)}
+	bl := b.Baseline()
 
-	start := time.Now()
-	for k, v := range m {
+	elapsed := b.BSync(func(k, v string) {
 		_ = db.Set(k, types.Value{Data: v})
-	}
-
-	elapsed := time.Since(start)
+	}) - bl
 	t.Log("WR Time:", elapsed)
 	rps := float64(N) / elapsed.Seconds()
 	t.Log("WR Perf:", twoDigit(rps), "RPS")
 
-	start = time.Now()
-	for k, _ := range m {
-		db.Get(k)
-	}
-	elapsed = time.Since(start)
+	elapsed = b.B(func(k, v string) {
+		_, _ = db.Get(k)
+	}) - bl
 	t.Log("RD Time:", elapsed)
 	rps = float64(N) / elapsed.Seconds()
 	t.Log("RD Perf:", twoDigit(rps), "RPS")

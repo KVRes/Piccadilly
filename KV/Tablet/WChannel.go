@@ -6,10 +6,12 @@ import (
 )
 
 func (b *Bucket) writeChannel() {
-	wFx := b.singleChannel
+	var wFx func()
 	switch b.cfg.WModel {
 	case types.NoLinear:
 		wFx = b.concurrentChannel
+	case types.Linear:
+		wFx = b.singleChannel
 	default:
 		log.Print("unknown write model, use Linear as default")
 	}

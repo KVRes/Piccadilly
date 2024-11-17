@@ -5,7 +5,9 @@ import (
 	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/KV/WAL"
 	"strconv"
+	"sync"
 	"testing"
+	"time"
 )
 
 func initDB() *Tablet.Bucket {
@@ -58,4 +60,37 @@ func notInDb(t *testing.T, bucket *Tablet.Bucket, m map[string]string) {
 			t.Fatal("Need Not Found, but got", k, "->", val)
 		}
 	}
+}
+
+type Benchmark struct {
+	Data map[string]string
+}
+
+func (b *Benchmark) Baseline() time.Duration {
+	return b.B(func(k, v string) {})
+}
+
+func (b *Benchmark) B(f func(string, string)) time.Duration {
+	wg := sync.WaitGroup{}
+	wg.Add(len(b.Data))
+
+	start := time.Now()
+	for k, v := range b.Data {
+		go func(k, v string) {
+			f(k, v)
+			wg.Done()
+		}(k, v)
+	}
+	wg.Wait()
+
+	return time.Since(start)
+}
+
+func (b *Benchmark) BSync(f func(string, string)) time.Duration {
+	start := time.Now()
+	for k, v := range b.Data {
+		f(k, v)
+	}
+
+	return time.Since(start)
 }
