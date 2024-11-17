@@ -146,8 +146,8 @@ func (d *Database) loadNamespace(path string, c types.ConnectStrategy) (*PNode, 
 	if err != nil {
 		return pnode, err
 	}
-	log.Printf("[Master] loaded bkt %p at pnode %s(%p)", pnode.Bkt, path, pnode)
 	pnode.Bkt = Tablet.NewBucket(str, wal)
 	pnode.LoadTime = time.Now().Unix()
+	log.Printf("[Master] loaded bkt %p at pnode %s(%p)", pnode.Bkt, path, pnode)
 	return pnode, nil
 }
