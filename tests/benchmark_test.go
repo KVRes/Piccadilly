@@ -45,6 +45,28 @@ func TestBktBenchmark(t *testing.T) {
 	t.Log("RD Perf:", twoDigit(rps), "RPS")
 }
 
+func TestBktPprof(t *testing.T) {
+	wal := WAL.NewFakeWALProvider()
+
+	db := Tablet.NewBucket(Store.NewSwissTableStore(), wal)
+
+	db.StartService(Tablet.BucketConfig{
+		WALPath:     "WAL.json",
+		PersistPath: "empty.json",
+		NoFlush:     true,
+		WModel:      types.NoLinear,
+		WBuffer:     10000,
+	})
+	N := 100_0000
+	b := &Benchmark{Data: datasetN(N)}
+
+	b.Pprof("bkt_w", func() {
+		b.B(func(k, v string) {
+			_ = db.Set(k, types.Value{Data: v})
+		})
+	})
+}
+
 func TestGRPCBenchmark(t *testing.T) {
 	db := KV.NewDatabase("./data")
 	db.Template.WALType = WAL.FakeWAL

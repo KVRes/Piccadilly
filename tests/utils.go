@@ -4,6 +4,9 @@ import (
 	"github.com/KVRes/Piccadilly/KV/Store"
 	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/KV/WAL"
+	"github.com/KevinZonda/GoX/pkg/panicx"
+	"os"
+	"runtime/pprof"
 	"strconv"
 	"sync"
 	"testing"
@@ -116,4 +119,40 @@ func (b *Benchmark) BSync(f func(string, string)) time.Duration {
 	}
 
 	return time.Since(start)
+}
+
+func (b *Benchmark) Pprof(filename string, f func()) {
+	cpu, err := os.Create(filename + "_cpu.pprof")
+	panicx.NotNilErr(err)
+
+	mem, err := os.Create(filename + "_mem.pprof")
+	panicx.NotNilErr(err)
+	defer func() {
+		pprof.StopCPUProfile()
+		pprof.WriteHeapProfile(mem)
+		mem.Close()
+		cpu.Close()
+	}()
+	pprof.StartCPUProfile(cpu)
+
+	f()
+
+}
+
+func Pprof[T any](filename string, f func() T) T {
+	cpu, err := os.Create(filename + "_cpu.pprof")
+	panicx.NotNilErr(err)
+
+	mem, err := os.Create(filename + "_mem.pprof")
+	panicx.NotNilErr(err)
+	defer func() {
+		pprof.StopCPUProfile()
+		pprof.WriteHeapProfile(mem)
+		mem.Close()
+		cpu.Close()
+	}()
+	pprof.StartCPUProfile(cpu)
+
+	return f()
+
 }
