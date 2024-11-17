@@ -14,9 +14,9 @@ type Provider interface {
 }
 
 type Record struct {
-	StateOper StateOperType
-	Key       string
-	Value     types.Value
+	StateOper StateOperType `json:"op"`
+	Key       string        `json:"k"`
+	Value     types.Value   `json:"v"`
 }
 
 type StateOperType string
