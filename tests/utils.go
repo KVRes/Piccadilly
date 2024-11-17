@@ -1,9 +1,9 @@
 package tests
 
 import (
+	"github.com/KVRes/Piccadilly/KV/Store"
 	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/KV/WAL"
-	"github.com/KVRes/Piccadilly/KV/store"
 	"strconv"
 	"testing"
 )
@@ -14,7 +14,7 @@ func initDB() *Tablet.Bucket {
 		panic(err)
 	}
 
-	db := Tablet.NewBucket(store.NewSwissTableStore(), wal)
+	db := Tablet.NewBucket(Store.NewSwissTableStore(), wal)
 
 	err = db.StartService(Tablet.BucketConfig{
 		WALPath:     "WAL.json",

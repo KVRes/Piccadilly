@@ -1,4 +1,4 @@
-package store
+package Store
 
 import (
 	"github.com/KVRes/Piccadilly/types"

@@ -2,9 +2,9 @@ package KV
 
 import (
 	"errors"
+	"github.com/KVRes/Piccadilly/KV/Store"
 	"github.com/KVRes/Piccadilly/KV/Tablet"
 	"github.com/KVRes/Piccadilly/KV/WAL"
-	"github.com/KVRes/Piccadilly/KV/store"
 	"github.com/KVRes/Piccadilly/types"
 	"github.com/KVRes/Piccadilly/utils"
 	"os"
@@ -139,7 +139,7 @@ func (d *Database) loadNamespace(path string, c types.ConnectStrategy) (*PNode, 
 		return pnode, err
 	}
 
-	str, err := store.NewStore(d.Template.StoreType)
+	str, err := Store.NewStore(d.Template.StoreType)
 	if err != nil {
 		return pnode, err
 	}

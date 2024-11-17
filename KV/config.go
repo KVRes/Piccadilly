@@ -1,8 +1,8 @@
 package KV
 
 import (
+	"github.com/KVRes/Piccadilly/KV/Store"
 	"github.com/KVRes/Piccadilly/KV/WAL"
-	"github.com/KVRes/Piccadilly/KV/store"
 	"github.com/KVRes/Piccadilly/types"
 	"time"
 )
@@ -13,7 +13,7 @@ type DatabaseTemplate struct {
 	LongInterval  time.Duration
 	NoFlush       bool
 	WALType       WAL.Type
-	StoreType     store.Type
+	StoreType     Store.Type
 	WModel        types.ConcurrentModel
 }
 
@@ -24,7 +24,7 @@ func DefaultDatabaseTemplate() DatabaseTemplate {
 		LongInterval:  5 * time.Minute,
 		NoFlush:       false,
 		WALType:       WAL.JsonWAL,
-		StoreType:     store.SwissTable,
+		StoreType:     Store.SwissTable,
 		WModel:        types.NoLinear,
 	}
 }

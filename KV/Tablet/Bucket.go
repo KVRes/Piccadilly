@@ -1,9 +1,9 @@
 package Tablet
 
 import (
+	"github.com/KVRes/Piccadilly/KV/Store"
 	"github.com/KVRes/Piccadilly/KV/WAL"
 	"github.com/KVRes/Piccadilly/KV/Watcher"
-	"github.com/KVRes/Piccadilly/KV/store"
 	"github.com/KVRes/Piccadilly/types"
 	"github.com/KVRes/Piccadilly/utils"
 	"github.com/KevinZonda/GoX/pkg/iox"
@@ -48,7 +48,7 @@ func (wr *internalReq) Close() {
 }
 
 type Bucket struct {
-	store    store.Provider
+	store    Store.Provider
 	wal      WAL.Provider
 	cfg      BucketConfig
 	wChannel chan internalReq
@@ -56,7 +56,7 @@ type Bucket struct {
 	wCount   sync.WaitGroup
 }
 
-func NewBucket(store store.Provider, wal WAL.Provider) *Bucket {
+func NewBucket(store Store.Provider, wal WAL.Provider) *Bucket {
 	return &Bucket{
 		store:   store,
 		wal:     wal,

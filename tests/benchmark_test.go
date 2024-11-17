@@ -2,8 +2,8 @@ package tests
 
 import (
 	"fmt"
+	"github.com/KVRes/Piccadilly/KV/Store"
 	"github.com/KVRes/Piccadilly/KV/WAL"
-	"github.com/KVRes/Piccadilly/KV/store"
 	"github.com/KVRes/Piccadilly/types"
 	"testing"
 	"time"
@@ -14,7 +14,7 @@ import (
 func TestDBBenchMark(t *testing.T) {
 	wal := WAL.NewFakeWALProvider()
 
-	db := Tablet.NewBucket(store.NewSwissTableStore(), wal)
+	db := Tablet.NewBucket(Store.NewSwissTableStore(), wal)
 
 	db.StartService(Tablet.BucketConfig{
 		WALPath:     "WAL.json",

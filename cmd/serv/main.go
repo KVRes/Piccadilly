@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/KVRes/Piccadilly/KV"
+	"github.com/KVRes/Piccadilly/KV/Store"
 	"github.com/KVRes/Piccadilly/KV/WAL"
-	"github.com/KVRes/Piccadilly/KV/store"
 	"github.com/KVRes/Piccadilly/serv"
 	"github.com/KVRes/Piccadilly/types"
 	"github.com/KevinZonda/GoX/pkg/iox"
@@ -25,7 +25,7 @@ type DBConfig struct {
 	LongInterval  *int                   `json:"long_interval"`
 	NoFlush       *bool                  `json:"no_flush"`
 	WALType       *WAL.Type              `json:"wal_type"`
-	StoreType     *store.Type            `json:"store_type"`
+	StoreType     *Store.Type            `json:"store_type"`
 	WModel        *types.ConcurrentModel `json:"w_model"`
 }
 
