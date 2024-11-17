@@ -7,6 +7,7 @@ import (
 	"github.com/KVRes/Piccadilly/KV/WAL"
 	"github.com/KVRes/Piccadilly/types"
 	"github.com/KVRes/Piccadilly/utils"
+	"log"
 	"os"
 	"time"
 )
@@ -82,6 +83,7 @@ func (d *Database) pullUpBkt(pnode *PNode, path string, concu types.ConcurrentMo
 	if pnode.Started {
 		return nil
 	}
+	log.Printf("[Bkt %p] start service", pnode.Bkt)
 	err := pnode.Bkt.StartService(Tablet.BucketConfig{
 		WALPath:       d.walPath(path),
 		PersistPath:   d.persistPath(path),
@@ -131,6 +133,7 @@ func (d *Database) loadNamespace(path string, c types.ConnectStrategy) (*PNode, 
 		if c != types.CreateIfNotExist {
 			return nil, os.ErrNotExist
 		}
+		log.Printf("[Master] created path: %s", path)
 		_ = os.MkdirAll(d.namespacePath(path), 0755)
 	}
 
@@ -143,6 +146,7 @@ func (d *Database) loadNamespace(path string, c types.ConnectStrategy) (*PNode, 
 	if err != nil {
 		return pnode, err
 	}
+	log.Printf("[Master] loaded bkt %p at pnode %s(%p)", pnode.Bkt, path, pnode)
 	pnode.Bkt = Tablet.NewBucket(str, wal)
 	pnode.LoadTime = time.Now().Unix()
 	return pnode, nil
