@@ -6,6 +6,8 @@ import (
 )
 
 func (b *Bucket) _modifyOper(eventType types.EventType, key string, value types.Value) error {
+	b.countId.Add(1)
+
 	rec := WAL.NewStateOperFromEventTypes(eventType).WithKeyValue(key, value)
 	if _, err := b.wal.Append(rec); err != nil {
 		return err

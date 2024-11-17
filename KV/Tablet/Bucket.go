@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -54,6 +55,12 @@ type Bucket struct {
 	wChannel chan internalReq
 	Watcher  *Watcher.KeyWatcher
 	wCount   sync.WaitGroup
+	countId  atomic.Int64
+	flushId  int64
+}
+
+func (b *Bucket) needFlush() bool {
+	return b.flushId != b.countId.Load()
 }
 
 func NewBucket(store Store.Provider, wal WAL.Provider) *Bucket {
@@ -134,11 +141,15 @@ func (b *Bucket) flushThread() {
 	}
 	for {
 		time.Sleep(b.cfg.FlushInterval)
+		if !b.needFlush() {
+			log.Printf("[Bkt %p] no need to flush", b)
+			continue
+		}
 
 		err := b.Flush()
-		log.Printf("[Bkt %p] flushed, err: %v\n", b, err)
+		log.Printf("[Bkt %p] flushed, err: %v", b, err)
 		if err != nil {
-			log.Println("Flush failed:", err)
+			log.Printf("[Bkt %p] flush failed: %v", b, err)
 			continue
 
 		}
@@ -146,6 +157,7 @@ func (b *Bucket) flushThread() {
 }
 
 func (b *Bucket) Flush() error {
+	b.flushId = b.countId.Load()
 	_, err := b.wal.Append(WAL.NewStateOperRecord(WAL.StateOperCheckpoint))
 	if err != nil {
 		return err
