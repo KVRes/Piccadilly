@@ -21,9 +21,9 @@ func panicHandler(p any) error {
 	return errors.New("panic")
 }
 
-func NewServer(basePath string) *Server {
+func NewServerWithDb(db *KV.Database) *Server {
 	svr := &Server{
-		Db: KV.NewDatabase(basePath),
+		Db: db,
 		Server: grpc.NewServer(
 			grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 				grpc_recovery.UnaryServerInterceptor(grpc_recovery.WithRecoveryHandler(panicHandler)),
@@ -48,6 +48,11 @@ func NewServer(basePath string) *Server {
 	pb.RegisterManagerServiceServer(svr.Server, mgmt)
 
 	return svr
+}
+
+func NewServer(basePath string) *Server {
+	db := KV.NewDatabase(basePath)
+	return NewServerWithDb(db)
 }
 
 func (s *Server) ServeTCP(addr string) error {

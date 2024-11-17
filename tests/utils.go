@@ -86,6 +86,29 @@ func (b *Benchmark) B(f func(string, string)) time.Duration {
 	return time.Since(start)
 }
 
+func (b *Benchmark) Batch(batch int, f func(string, string)) time.Duration {
+	wg := sync.WaitGroup{}
+
+	start := time.Now()
+	cur := 0
+	for k, v := range b.Data {
+		cur++
+		wg.Add(1)
+		go func(k, v string, wg *sync.WaitGroup) {
+			f(k, v)
+			wg.Done()
+		}(k, v, &wg)
+
+		if cur%batch == 0 {
+			wg.Wait()
+			wg = sync.WaitGroup{}
+		}
+	}
+	wg.Wait()
+
+	return time.Since(start)
+}
+
 func (b *Benchmark) BSync(f func(string, string)) time.Duration {
 	start := time.Now()
 	for k, v := range b.Data {
