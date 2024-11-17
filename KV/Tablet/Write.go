@@ -42,7 +42,10 @@ func (b *Bucket) _doWrite(kvp internalReq, counter bool) (string, bool) {
 	default:
 		kvp.done <- nil
 	}
-	return "", exist
+	if !exist {
+		return "", false
+	}
+	return v.Data, exist
 }
 
 func (b *Bucket) singleChannel() {
