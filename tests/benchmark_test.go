@@ -101,6 +101,34 @@ func TestGRPCBenchmark(t *testing.T) {
 	t.Log("RD Perf:", twoDigit(rps), "RPS")
 }
 
+func TestGRPCPprof(t *testing.T) {
+	db := KV.NewDatabase("./data")
+	db.Template.WALType = WAL.FakeWAL
+	db.Template.NoFlush = true
+	sv := serv.NewServerWithDb(db)
+	go sv.ServeTCP("127.0.0.1:12306")
+
+	N := 100_0000
+	b := &Benchmark{Data: datasetN(N)}
+
+	bl := b.Baseline()
+	pool, err := client.NewPool(10, "127.0.0.1:12306")
+	panicx.NotNilErr(err)
+	err = pool.Connect("/kevin/zonda", types.CreateIfNotExist, types.NoLinear)
+	panicx.NotNilErr(err)
+	defer pool.Close()
+
+	b.Pprof("grpc_w", func() {
+		elapsed := b.B(func(k, v string) {
+			_ = pool.Client().Set(k, v)
+		}) - bl
+
+		t.Log("WR Time:", elapsed)
+		rps := float64(N) / elapsed.Seconds()
+		t.Log("WR Perf:", twoDigit(rps), "RPS")
+	})
+}
+
 func twoDigit(f float64) string {
 	return fmt.Sprintf("%.2f", f)
 }
