@@ -6,7 +6,7 @@ type KVPair struct {
 }
 
 type Value struct {
-	Data string `json:"data"`
+	Data string `json:"d"`
 }
 
 type KVPairV struct {
