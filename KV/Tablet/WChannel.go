@@ -6,15 +6,16 @@ import (
 )
 
 func (b *Bucket) writeChannel() {
+	wFx := b.singleChannel
 	switch b.cfg.WModel {
-	case types.Linear:
-		b.singleChannel()
 	case types.NoLinear:
-		b.concurrentChannel()
+		wFx = b.concurrentChannel
 	default:
 		log.Print("unknown write model, use Linear as default")
-		b.singleChannel()
 	}
+
+	b.loop(wFx)
+
 }
 
 func (b *Bucket) _doWrite(kvp internalReq, counter bool) (string, bool) {
@@ -49,11 +50,9 @@ func (b *Bucket) _doWrite(kvp internalReq, counter bool) (string, bool) {
 }
 
 func (b *Bucket) singleChannel() {
-	for {
-		kvp := <-b.wChannel
-		oldV, oldEx := b._doWrite(kvp, false)
-		go b.doEvent(oldV, oldEx, kvp)
-	}
+	kvp := <-b.wChannel
+	oldV, oldEx := b._doWrite(kvp, false)
+	go b.doEvent(oldV, oldEx, kvp)
 }
 
 func (b *Bucket) doEvent(origV string, origExist bool, kvp internalReq) {
@@ -74,11 +73,9 @@ func (b *Bucket) doEvent(origV string, origExist bool, kvp internalReq) {
 }
 
 func (b *Bucket) concurrentChannel() {
-	for {
-		kv := <-b.wChannel
-		go func(kvp internalReq) {
-			oldV, oldEx := b._doWrite(kvp, true)
-			b.doEvent(oldV, oldEx, kvp)
-		}(kv)
-	}
+	kv := <-b.wChannel
+	go func(kvp internalReq) {
+		oldV, oldEx := b._doWrite(kvp, true)
+		b.doEvent(oldV, oldEx, kvp)
+	}(kv)
 }

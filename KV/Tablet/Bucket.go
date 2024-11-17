@@ -7,7 +7,6 @@ import (
 	"github.com/KVRes/Piccadilly/types"
 	"github.com/KVRes/Piccadilly/utils"
 	"github.com/KevinZonda/GoX/pkg/iox"
-	"log"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -30,24 +29,6 @@ func (b *BucketConfig) Normalise() {
 	}
 }
 
-func toReq(kvp types.KVPairV, t types.EventType) internalReq {
-	return internalReq{
-		KVPairV: kvp,
-		done:    make(chan error),
-		t:       t,
-	}
-}
-
-type internalReq struct {
-	t types.EventType
-	types.KVPairV
-	done chan error
-}
-
-func (wr *internalReq) Close() {
-	close(wr.done)
-}
-
 type Bucket struct {
 	store    Store.Provider
 	wal      WAL.Provider
@@ -57,6 +38,11 @@ type Bucket struct {
 	wCount   sync.WaitGroup
 	countId  atomic.Int64
 	flushId  int64
+	exit     chan struct{}
+}
+
+func (b *Bucket) Close() {
+	close(b.exit)
 }
 
 func (b *Bucket) needFlush() bool {
@@ -108,10 +94,11 @@ func (b *Bucket) StartService(cfg BucketConfig) error {
 		}
 	}
 
-	if err := b.RecoverFromWAL(); err != nil {
+	if err = b.RecoverFromWAL(); err != nil {
 		return err
 	}
 
+	b.exit = make(chan struct{})
 	b.wChannel = make(chan internalReq, cfg.WBuffer)
 	// Give daemon a lock!
 	go b.flushThread()
@@ -122,38 +109,6 @@ func (b *Bucket) StartService(cfg BucketConfig) error {
 
 func (b *Bucket) appendToWChannel(req internalReq) {
 	b.wChannel <- req
-}
-
-func (b *Bucket) longDaemonThread() {
-	if b.cfg.LongInterval <= 0 {
-		return
-	}
-	for {
-		time.Sleep(b.cfg.LongInterval)
-		b.Watcher.GC()
-		b.wal.Truncate()
-	}
-}
-
-func (b *Bucket) flushThread() {
-	if b.cfg.NoFlush || b.cfg.FlushInterval <= 0 {
-		return
-	}
-	for {
-		time.Sleep(b.cfg.FlushInterval)
-		if !b.needFlush() {
-			log.Printf("[Bkt %p] no need to flush", b)
-			continue
-		}
-
-		err := b.Flush()
-		log.Printf("[Bkt %p] flushed, err: %v", b, err)
-		if err != nil {
-			log.Printf("[Bkt %p] flush failed: %v", b, err)
-			continue
-
-		}
-	}
 }
 
 func (b *Bucket) Flush() error {
