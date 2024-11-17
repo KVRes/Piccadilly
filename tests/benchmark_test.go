@@ -25,7 +25,7 @@ func TestBktBenchmark(t *testing.T) {
 		NoFlush:     true,
 		WModel:      types.NoLinear,
 	})
-	N := 100_0000
+	N := 500_0000
 	b := &Benchmark{Data: datasetN(N)}
 	bl := b.Baseline()
 	t.Log("Baseline:", bl)
@@ -86,7 +86,7 @@ func TestGRPCBenchmark(t *testing.T) {
 	var elapsed time.Duration
 	var rps float64
 
-	elapsed = b.Batch(1000, func(k, v string) {
+	elapsed = b.B(func(k, v string) {
 		_ = pool.Client().Set(k, v)
 	}) - bl
 	t.Log("WR Time:", elapsed)

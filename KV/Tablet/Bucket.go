@@ -107,10 +107,6 @@ func (b *Bucket) StartService(cfg BucketConfig) error {
 	return nil
 }
 
-func (b *Bucket) appendToWChannel(req internalReq) {
-	b.wChannel <- req
-}
-
 func (b *Bucket) Flush() error {
 	b.flushId = b.countId.Load()
 	_, err := b.wal.Append(WAL.NewStateOperRecord(WAL.StateOperCheckpoint))

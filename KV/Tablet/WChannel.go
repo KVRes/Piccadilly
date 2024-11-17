@@ -9,9 +9,10 @@ func (b *Bucket) writeChannel() {
 	var wFx func()
 	switch b.cfg.WModel {
 	case types.NoLinear:
-		wFx = b.concurrentChannel
+		log.Println("NonLinear no need write channel, channel daemon exited")
+		return
 	case types.Linear:
-		wFx = b.singleChannel
+		wFx = b.linearChannel
 	default:
 		log.Print("unknown write model, use Linear as default")
 	}
@@ -51,10 +52,15 @@ func (b *Bucket) _doWrite(kvp internalReq, counter bool) (types.Value, bool) {
 	return v, exist
 }
 
-func (b *Bucket) singleChannel() {
+func (b *Bucket) linearChannel() {
 	kvp := <-b.wChannel
 	oldV, oldEx := b._doWrite(kvp, false)
 	go b.doEvent(oldV, oldEx, kvp)
+}
+
+func (b *Bucket) noLinearChannel(req internalReq) {
+	oldV, oldEx := b._doWrite(req, true)
+	go b.doEvent(oldV, oldEx, req)
 }
 
 func (b *Bucket) doEvent(origV types.Value, origExist bool, kvp internalReq) {
@@ -72,12 +78,4 @@ func (b *Bucket) doEvent(origV types.Value, origExist bool, kvp internalReq) {
 	case types.EventAll:
 		b.Watcher.EmitEvent(kvp.Key, types.EventAll)
 	}
-}
-
-func (b *Bucket) concurrentChannel() {
-	kv := <-b.wChannel
-	go func(kvp internalReq) {
-		oldV, oldEx := b._doWrite(kvp, true)
-		b.doEvent(oldV, oldEx, kvp)
-	}(kv)
 }

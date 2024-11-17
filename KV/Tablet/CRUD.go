@@ -15,8 +15,17 @@ func (b *Bucket) _modifyOper(eventType types.EventType, key string, value types.
 	}
 	req := toReq(types.KVPairV{Key: key, Value: value}, eventType)
 	defer req.Close()
-	b.appendToWChannel(req)
+	b.sendToWQueue(req)
 	return <-req.done
+}
+
+func (b *Bucket) sendToWQueue(req internalReq) {
+	switch b.cfg.WModel {
+	case types.NoLinear:
+		go b.noLinearChannel(req)
+	default:
+		b.wChannel <- req
+	}
 }
 
 func (b *Bucket) Set(key string, value types.Value) error {
