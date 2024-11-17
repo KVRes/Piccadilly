@@ -150,6 +150,9 @@ func (b *Bucket) RecoverFromRecords(recs []WAL.Record) error {
 			return err
 		}
 	}
+	if len(recs) > 0 {
+		b.countId.Add(1)
+	}
 	return nil
 }
 func (b *Bucket) RecoverFromWAL() error {
