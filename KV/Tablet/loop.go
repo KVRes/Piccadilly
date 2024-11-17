@@ -16,24 +16,35 @@ func (b *Bucket) loop(f func()) {
 	}
 }
 
+func (b *Bucket) loopWithInterval(f func(), interval time.Duration) {
+	inv := time.After(interval)
+	for {
+		select {
+		case <-b.exit:
+			return
+		case <-inv:
+			f()
+			inv = time.After(interval)
+		}
+	}
+}
+
 func (b *Bucket) longDaemonThread() {
 	if b.cfg.LongInterval <= 0 {
 		return
 	}
 
-	b.loop(func() {
-		time.Sleep(b.cfg.LongInterval)
+	b.loopWithInterval(func() {
 		b.Watcher.GC()
 		b.wal.Truncate()
-	})
+	}, b.cfg.LongInterval)
 }
 
 func (b *Bucket) flushThread() {
 	if b.cfg.NoFlush || b.cfg.FlushInterval <= 0 {
 		return
 	}
-	b.loop(func() {
-		time.Sleep(b.cfg.FlushInterval)
+	b.loopWithInterval(func() {
 		if !b.needFlush() {
 			log.Printf("[Bkt %p] no need to flush", b)
 			return
@@ -44,7 +55,6 @@ func (b *Bucket) flushThread() {
 		if err != nil {
 			log.Printf("[Bkt %p] flush failed: %v", b, err)
 			return
-
 		}
-	})
+	}, b.cfg.FlushInterval)
 }
