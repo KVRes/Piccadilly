@@ -9,6 +9,10 @@ type SwissTableStore struct {
 	*csmap.CsMap[string, types.Value]
 }
 
+func (st *SwissTableStore) Len() int {
+	return st.CsMap.Count()
+}
+
 func NewSwissTableStore() *SwissTableStore {
 	m := csmap.Create[string, types.Value](
 		csmap.WithShardCount[string, types.Value](32),

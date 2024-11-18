@@ -42,7 +42,7 @@ func (w *KeyWatcher) EmitEvent(key string, eventType types.EventType) {
 		if w.obsolete {
 			continue
 		}
-		if w.et == eventType || w.et == types.EventAll {
+		if w.et == eventType || w.et == types.EventAll || eventType == types.EventClear {
 			w.sub.Notify(key, eventType)
 		}
 	}

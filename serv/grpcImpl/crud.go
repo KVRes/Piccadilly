@@ -16,6 +16,24 @@ type CRUDService struct {
 	Debug bool
 }
 
+func (c *CRUDService) Len(ctx context.Context, namespace *pb.Namespace) (*pb.IntResponse, error) {
+	bkt, err := c.getBkt(namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.IntResponse{Val: int32(bkt.Len())}, err
+}
+
+func (c *CRUDService) Clear(ctx context.Context, namespace *pb.Namespace) (*pb.OkResponse, error) {
+	bkt, err := c.getBkt(namespace)
+	if err != nil {
+		return nil, err
+	}
+	err = bkt.Clear()
+	return &pb.OkResponse{Ok: err == nil}, err
+}
+
 func (c *CRUDService) Keys(ctx context.Context, request *pb.KeysRequest) (*pb.KeysResponse, error) {
 	bkt, err := c.getBkt(request)
 	if err != nil {

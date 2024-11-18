@@ -22,6 +22,18 @@ func (m *MemStore) Set(key string, value types.Value) error {
 	return nil
 }
 
+func (m *MemStore) Len() int {
+	m.l.RLock()
+	defer m.l.RUnlock()
+	return len(m.m)
+}
+
+func (m *MemStore) Clear() {
+	m.l.Lock()
+	defer m.l.Unlock()
+	m.m = make(map[string]types.Value)
+}
+
 func (m *MemStore) Get(key string) (types.Value, error) {
 	m.l.RLock()
 	defer m.l.RUnlock()

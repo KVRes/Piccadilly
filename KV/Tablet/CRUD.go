@@ -36,6 +36,10 @@ func (b *Bucket) Del(key string) error {
 	return b._modifyOper(types.EventDelete, key, types.Value{})
 }
 
+func (b *Bucket) Clear() error {
+	return b._modifyOper(types.EventClear, "", types.Value{})
+}
+
 func (b *Bucket) Get(key string) (types.Value, error) {
 	val, err := b.store.Get(key)
 	if err != nil {
@@ -49,4 +53,8 @@ func (b *Bucket) Get(key string) (types.Value, error) {
 
 func (b *Bucket) Keys() ([]string, error) {
 	return b.store.Keys()
+}
+
+func (b *Bucket) Len() int {
+	return b.store.Len()
 }

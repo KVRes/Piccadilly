@@ -165,6 +165,23 @@ func (c *Client) CreatePNode(path string) error {
 	return err
 }
 
+func (c *Client) Len() (int, error) {
+	resp, err := c.crud.Len(context.Background(), &pb.Namespace{
+		Namespace: c.path,
+	})
+	if err != nil {
+		return 0, err
+	}
+	return int(resp.GetVal()), nil
+}
+
+func (c *Client) Clear() error {
+	_, err := c.crud.Clear(context.Background(), &pb.Namespace{
+		Namespace: c.path,
+	})
+	return err
+}
+
 func (c *Client) Connect(path string, strategy types.ConnectStrategy, concu types.ConcurrentModel) error {
 	resp, err := c.mgr.Connect(context.Background(),
 		&pb.ConnectRequest{

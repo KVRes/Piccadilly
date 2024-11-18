@@ -63,6 +63,9 @@ func (b *Bucket) apply(rec WAL.Record) error {
 		return b.store.Set(rec.Key, rec.Value)
 	case WAL.StateOperDel:
 		return b.store.Del(rec.Key)
+	case WAL.StateOperClear:
+		b.store.Clear()
+		return nil
 	}
 	return nil
 }

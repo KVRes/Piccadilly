@@ -12,6 +12,8 @@ type Provider interface {
 	SerializeAll() ([]byte, error)
 	Load(data []byte) error
 	Keys() ([]string, error)
+	Len() int
+	Clear()
 }
 
 var ErrKeyNotFound = errors.New("key not found")

@@ -53,12 +53,28 @@ message KeysResponse {
     repeated string keys = 2;
 }
 
+message Namespace {
+    string namespace = 1;
+}
+
+message IntResponse {
+    int32 val = 2;
+}
+
+message OkResponse {
+    bool ok = 1;
+}
+
+
+
 // 事件存储服务
 service CRUDService {
     rpc Set(SetRequest) returns (CRUDResponse) {}
     rpc Get(GetRequest) returns (CRUDResponse) {}
     rpc Del(DelRequest) returns (CRUDResponse) {}
     rpc Keys(KeysRequest) returns (KeysResponse) {}
+    rpc Len(Namespace) returns (IntResponse){}
+    rpc Clear(Namespace) returns (OkResponse) {}
 }
 
 enum ConnectionStrategy {

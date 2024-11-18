@@ -24,6 +24,7 @@ type StateOperType string
 const (
 	StateOperSet          StateOperType = "set"
 	StateOperDel          StateOperType = "del"
+	StateOperClear        StateOperType = "clear"
 	StateOperCheckpoint   StateOperType = "chk"   // now they data is persisting, the log can be truncated from here
 	StateOperCheckpointOk StateOperType = "chkok" // only when an OK is received, the checkpoint is complete, and the log can be truncated
 )
@@ -40,6 +41,8 @@ func NewStateOperFromEventTypes(event types.EventType) Record {
 		return NewStateOperRecord(StateOperSet)
 	case types.EventDelete:
 		return NewStateOperRecord(StateOperDel)
+	case types.EventClear:
+		return NewStateOperRecord(StateOperClear)
 	default:
 		panic("unknown event type")
 	}

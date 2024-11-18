@@ -28,6 +28,12 @@ func (b *Bucket) _doWrite(kvp internalReq, counter bool) (types.Value, bool) {
 		defer b.wCount.Done()
 	}
 
+	if kvp.t == types.EventClear {
+		b.store.Clear()
+		kvp.done <- nil
+		return types.Value{}, false
+	}
+
 	v, e := b.store.Get(kvp.Key) // FIXME: This will cause ~3% perf degrade, but is required for event delta
 	exist := e == nil
 	switch kvp.t {
@@ -69,13 +75,10 @@ func (b *Bucket) doEvent(origV types.Value, origExist bool, kvp internalReq) {
 		if origExist && origV.Equals(kvp.Value) {
 			return
 		}
-		b.Watcher.EmitEvent(kvp.Key, types.EventSet)
 	case types.EventDelete:
 		if !origExist {
 			return
 		}
-		b.Watcher.EmitEvent(kvp.Key, types.EventDelete)
-	case types.EventAll:
-		b.Watcher.EmitEvent(kvp.Key, types.EventAll)
 	}
+	b.Watcher.EmitEvent(kvp.Key, kvp.t)
 }

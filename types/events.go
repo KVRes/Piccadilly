@@ -6,4 +6,5 @@ const (
 	EventAll EventType = iota
 	EventSet
 	EventDelete
+	EventClear
 )
