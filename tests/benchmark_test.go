@@ -37,12 +37,20 @@ func TestBktBenchmark(t *testing.T) {
 	rps := float64(N) / elapsed.Seconds()
 	t.Log("WR Perf:", twoDigit(rps), "RPS")
 
-	elapsed = b.Batch(10000, func(k, v string) {
+	t.Log("WR Time w/o BL:", elapsed-bl)
+	rps = float64(N) / (elapsed - bl).Seconds()
+	t.Log("WR Perf w/o BL:", twoDigit(rps), "RPS")
+
+	elapsed = b.B(func(k, v string) {
 		_, _ = db.Get(k)
 	})
 	t.Log("RD Time:", elapsed)
 	rps = float64(N) / elapsed.Seconds()
 	t.Log("RD Perf:", twoDigit(rps), "RPS")
+
+	t.Log("RD Time w/o BL:", elapsed-bl)
+	rps = float64(N) / (elapsed - bl).Seconds()
+	t.Log("RD Perf w/o BL:", twoDigit(rps), "RPS")
 }
 
 func TestBktPprof(t *testing.T) {
