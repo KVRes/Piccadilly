@@ -89,3 +89,17 @@ func createCmd(elems []string) error {
 	err := cli.CreatePNode(ns)
 	return err
 }
+
+func lenCmd(elems []string) error {
+	l, err := cli.Len()
+	if err != nil {
+		return err
+	}
+	fmt.Println(l)
+	return nil
+}
+
+func clearCmd(elems []string) error {
+	err := cli.Clear()
+	return err
+}

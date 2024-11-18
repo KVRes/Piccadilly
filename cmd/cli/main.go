@@ -71,6 +71,10 @@ func OnConnected() {
 			cmdErr = onCommand(elems, -1, lsCmd)
 		case "create":
 			cmdErr = onCommand(elems, 2, createCmd)
+		case "len":
+			cmdErr = onCommand(elems, -1, lenCmd)
+		case "clear":
+			cmdErr = onCommand(elems, -1, clearCmd)
 		case "exit":
 			return
 		default:
