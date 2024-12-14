@@ -2,5 +2,5 @@
 
 bash build.sh
 
-cp out/serv /usr/local/bin/pkv
-cp out/cli /usr/local/bin/pkv-cli
+sudo cp out/serv /usr/local/bin/pkv
+sudo cp out/cli /usr/local/bin/pkv-cli
